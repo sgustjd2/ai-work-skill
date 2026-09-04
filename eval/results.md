@@ -1,5 +1,22 @@
 # 검증 기준선 (2026-09-04)
 
+## 골든 프롬프트 재현 (2026-09-04)
+
+`prompts/01`~`08` 을 저장소 도구만으로 재현하고 각 프롬프트의 자동 검사를 돌린 결과다. 실기기(사내 GitLab·게이트웨이·공식 템플릿) 없이, 모르는 값은 `[확인 필요]` 로 남겼다.
+
+| # | 프롬프트 | 검사 | 결과 |
+|---|---|---|---|
+| 01 | 게이트웨이 설계서 docx | 렌더 + check_output | PASS (하드 0, 테마 밖 색 0, 목차·구성도 2·비교표) |
+| 02 | 경영진 10장 덱 pptx | 렌더 + check_output | PASS (9장, 덱 소프트 0, 네이티브 차트·타임라인) |
+| 03 | 요약 API 서비스 골격 | scaffold → uv sync → pytest → import_graph | 9 passed, 순환 0, 레이어 위반 0 |
+| 04 | MR 리뷰 | 리뷰 형식 + H9 | 3건 검출(S1·A1·T1), 시크릿 H9 확인 |
+| 05 | 게이트웨이 config | config-validate | ok True, error 0 (V1~V8) |
+| 06 | 트렌드 브리프 | doc_lint + 출처 | 5항목 모두 URL·날짜, 하드 0 소프트 0 |
+| 07 | 개발 가이드(경어) | 렌더 + check_output + S16 | PASS, 존댓말 혼용 0 |
+| 08 | 순환 import 정리 | import_graph + ADR 렌더 | 순환 검출 후 ADR 로 제거 계획, docx 렌더 |
+
+재현 중 `doc_lint` S16(존댓말 혼용)이 경어 `~합니다` 를 평서문으로 오탐하던 버그를 고쳤다(경어 문서 전부에 영향). 정규식을 `~니다.` 전체로 넓히고 이중 차감을 없앴다.
+
 ## check_output 기준선
 
 `mcp/docgen/fixtures/` 의 설계서(`design.doc.md`)와 덱(`gateway.deck.md`)을 렌더링해 `check_output.py` 로 검사한 결과다. 이 두 파일은 스킬이 만드는 문서·덱의 대표 형태다.
