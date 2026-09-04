@@ -12,12 +12,12 @@
 | 개발 가이드·교육 | doc-write(가이드·교육), deck-write | FR-7, 17 | docgen | 07 | M0, M1 | doc-write SKILL·references M0 완료, 렌더링 M1 |
 | 생성형 AI 서비스 분석·설계 | doc-write(설계서), genai-patterns, docgen | FR-7, 9~12, 19, 35, 36 | docgen | 01, 02 | M1 | doc-write M0 완료, docgen M1 |
 | 생성형 AI 서비스 개발·유지보수 | fastapi-service, llm-gateway | FR-20, 27, 35 | test_m2_scripts(scaffold·route_table), 생성 서비스 pytest | 03, 05 | M2, M3 | **M2 완료**: 예제 서비스+scaffold(7옵션)+route_table, 생성 골격 pytest 통과(base 8, sse 9) |
-| API·오픈소스 활용 | llm-gateway, model-serving | FR-27, 29 | litellm_ops | 05 | M3 | |
-| 최신 AI 트렌드 조사·적용 | ai-trend-brief | FR-30 | check_output | 06 | M3 | |
+| API·오픈소스 활용 | llm-gateway, model-serving | FR-27, 29 | litellm_ops(21), vram/bench(5) | 05 | M3 | **완료**: 게이트웨이 설정·클라이언트, vLLM·양자화 참조 |
+| 최신 AI 트렌드 조사·적용 | ai-trend-brief | FR-30 | (형식은 M4 eval) | 06 | M3 | **완료**: SKILL + sources.yaml + brief-template |
 | LLM 이해·API 사용 | LLMClient(게이트웨이), python-conventions | FR-26, 27 | 생성 서비스 test_llm_client | 03 | M2, M3 | **M2 완료**: 게이트웨이 클라이언트·재시도·비용헤더·프롬프트 로더, python-conventions |
-| 모델 최적화·서빙 | model-serving, vram_estimate.py | FR-29 | test_scripts | manual | M3 | |
-| 클라우드(Azure/AWS/GCP) | 참조 문서, deploy-targets | FR-21, 27 | config_validate | 05 | M2, M3 | |
-| LiteLLM·LLM Gateway 구축 | llm-gateway, litellm-ops MCP | FR-27, 28 | litellm_ops | 05 | M3 | |
+| 모델 최적화·서빙 | model-serving, vram_estimate·bench_llm | FR-29 | test_m3_scripts(5) | manual | M3 | **완료**: VRAM 산정·벤치, sizing·quantization·vllm·alternatives |
+| 클라우드(Azure/AWS/GCP) | azure·bedrock·vertex 참조, deploy-targets | FR-21, 27 | config_validate 픽스처 | 05 | M2, M3 | **M3 완료**: 제공자 3종 연결 참조, config.example 검증 통과 |
+| LiteLLM·LLM Gateway 구축 | llm-gateway, litellm-ops MCP | FR-27, 28 | litellm_ops(21: ops+validate) | 05 | M3 | **완료**: MCP 12툴+CLI, config_validate V1~V8, 쓰기 게이트 |
 | 문서·덱이 회사 것처럼 | STYLE.md, 테마, doc_lint, 부록 B | FR-1~5, 10, 11, 18 | test_doc_lint, test_theme, test_install | 01, 02, 07 | M0, M1 | M0 완료: doc_lint(H1~H10·S1~S18)·테마·install·STYLE.md, 72 테스트 PASS |
 | ui-skill-set 연동 | theme_export, install --with-ui | FR-33 | test_theme | manual | M4 | |
 
@@ -67,3 +67,15 @@ FR-20~26, 35 전부 구현. 스크립트 단위 테스트 10개 추가(누적 13
 - FR-26 python-conventions.md, FR-35 genai-patterns.md: 플러그인 루트 `references/`(공용). RAG·프롬프트·구조화 출력·비동기·가드레일·평가.
 - 스크립트는 전부 표준 라이브러리만. 서비스 자산은 `{{pkg}}` 토큰 템플릿이라 ruff 에서 제외(extend-exclude).
 - 다음: M3(LLM 운영: llm-gateway·litellm-ops MCP·model-serving·ai-trend-brief).
+
+## M3 완료 (LLM 운영, 2026-09-04)
+
+FR-27~30 전부 구현. litellm_ops 21 + M3 스크립트 5 테스트 추가(누적 167 PASS, manual 1 제외). ruff·doc_lint 통과.
+
+- FR-27 llm-gateway: SKILL + assets(config.example.yaml[검증 통과]·compose.yaml·.env.example·client_example.py) + references 7종(azure·bedrock·vertex·vllm·observability·security·ops-runbook).
+- FR-28 litellm-ops MCP: mcp/litellm_ops(uv 프로젝트). core(LiteLLMOps 12메서드, 키 마스킹, 쓰기 게이트) + validate(config_validate V1~V8, config_diff) + server(FastMCP 12툴) + CLI. 테스트는 httpx.MockTransport 로 각 엔드포인트 픽스처, config_validate V1~V8 각 1개.
+- FR-29 model-serving: SKILL + scripts(vram_estimate.py 가중치+KV+여유, bench_llm.py TTFT p50/p95·tokens/s) + references 4종(vllm·quantization·sizing·alternatives).
+- FR-30 ai-trend-brief: SKILL + assets(sources.yaml·brief-template.md). WebSearch·WebFetch.
+- 쓰기 게이트: LITELLM_OPS_ALLOW_WRITE=true 일 때만 키 발급·차단·팀 생성. 시크릿은 마스킹.
+- config.example.yaml 은 config_validate 를 통과한다(azure 2리전·bedrock·vertex·vllm·임베딩, 폴백 무결, os.environ 참조).
+- 다음: M4(배포·플러그인 매니페스트·.mcp.json·eval·ui 연동).

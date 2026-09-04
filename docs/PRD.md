@@ -8,7 +8,7 @@ doc_lint: off
 |---|---|
 | 버전 | 0.2 (초안, 구현 전). 0.1의 누락 점검 결과 반영: MCP 경로 해석(§9), H6 한국 문서 기호 예외·H9 자리표시자 예외·H10 렌더러 우회 차단(§7.1), S18 용어 통일(§7.2), GenAI 패턴·RAG·프롬프트 관리(§8.4, §8.12), 팀 예산 툴(§9.1), 차트 DSL·docx 템플릿 모드·결과물 위치(§10), 구현자용 `CLAUDE.md`(§11.9), 금지 표현 사전 전문(부록 B), 추적표(부록 E), 합류 첫 주 확인 목록(부록 F) |
 | 작성일 | 2026-09-04 |
-| 진행 | **M0·M1·M2 완료**(2026-09-04). M0: FR-1~8(골격·훅). M1: FR-9~19·36(docgen). M2: FR-20~26·35(fastapi-service+scaffold·gitlab-ci·py-test·py-review·py-refactor·python-conventions·genai-patterns). 139 테스트 PASS(+manual 1), ruff clean, 자기 검사 하드 0. 생성 FastAPI 골격이 실제 pytest 통과, 설계서 docx·덱 pptx 실제 렌더 확인. 다음은 M3(LLM 운영) |
+| 진행 | **M0~M3 완료**(2026-09-04). M0 골격·훅, M1 docgen(문서·덱), M2 개발 스킬(fastapi-service+scaffold 외), M3 LLM 운영(llm-gateway·litellm-ops MCP 12툴·model-serving·ai-trend-brief). 167 테스트 PASS(+manual 1), ruff clean, 자기 검사 하드 0(98문서). 생성 FastAPI 골격 실제 pytest 통과, config.example 검증 통과, 설계서 docx·덱 pptx 실제 렌더. 남은 것은 M4(배포·매니페스트·eval·ui 연동) |
 | 작성 | Claude Fable 5.1 (PRD 전담) |
 | 구현 | Claude Opus 4.8. **이 문서만 보고** 코드를 만든다. 결정이 필요한 곳은 §14의 추천값으로 진행한다 |
 | 저장소 | `E:\workspace\ai-work-skill` (플러그인 이름 `ai-work-skill`, 배포 시 `sgustjd2/ai-work-skill`) |
@@ -1308,7 +1308,7 @@ python templates/install.py --target <dir> [--org "데이타솔루션 기술연�
 | **M0 골격 (완료)** | FR-1~8: STYLE.md, 테마, `doc_lint --pre`, 테스트, install.py, ai-init, doc-write(md까지), 스니펫 | 완료 2026-09-04. 실제 프로젝트 설치·차단 확인, 자기 검사 하드 0, `uv run pytest` 72 PASS. 소프트 룰(S1~S18)과 `--stop`/`--all`도 함께 구현(FR-18 선행), py_format(FR-25) 선행 |
 | **M1 문서 생성 (완료)** | FR-9~19, 36: docgen 파서·docx·pptx·diagram·차트·MCP·CLI·preview·추출, deck-write, arch-doc-types | 완료 2026-09-04. docgen 53 테스트 PASS, 설계서 docx·게이트웨이 덱 pptx 실제 렌더(복구 없이 열림), 템플릿 모드 픽스처 검증. 골든 01·02 는 M4 eval 에서 실측 |
 | **M2 개발 (완료)** | FR-20~26, 35: fastapi-service+scaffold(7옵션)+route_table, gitlab-ci+ci_lint, py-test+test_gaps, py-review, py-refactor+import_graph, python-conventions, genai-patterns | 완료 2026-09-04. 스크립트 10테스트 PASS, 생성 골격이 Windows 에서 pytest 통과(base 8, sse 9). 골든 03·04·08 은 M4 eval 에서 실측 |
-| **M3 LLM 운영** | FR-27~30: llm-gateway, litellm-ops, model-serving, ai-trend-brief | 골든 05·06 PASS. 실제 LiteLLM(docker compose)에 대해 `gateway_health`·`test_completion` 1회 성공 |
+| **M3 LLM 운영 (완료)** | FR-27~30: llm-gateway(assets+참조 7종), litellm-ops MCP(12툴, config_validate V1~V8, 쓰기 게이트), model-serving(vram_estimate·bench_llm), ai-trend-brief | 완료 2026-09-04. litellm_ops 21 + 스크립트 5 테스트 PASS(httpx MockTransport), config.example 검증 통과. 실제 LiteLLM 대상 `gateway_health`·`test_completion` 은 게이트웨이 확보 시(부록 F-4). 골든 05·06 은 M4 eval |
 | **M4 배포** | FR-31~34: 매니페스트, README, eval 기준선, ui-skill-set 연동, 저장소 CI | 다른 PC에서 README만 보고 설치·골든 01 재현. `results.md`에 기준선 기록 |
 
 권장 순서는 M0 → M1 → M2 → M3 → M4. M1과 M2는 독립이라 병렬 가능. 각 마일스톤 끝에 `docs/PRD.md` 상태 표와 이 표를 갱신한다.

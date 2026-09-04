@@ -1,0 +1,30 @@
+services:
+  litellm:
+    image: ghcr.io/berriai/litellm:main-latest
+    command: ["--config", "/app/config.yaml", "--port", "4000"]
+    ports: ["4000:4000"]
+    env_file: .env
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+    depends_on: [postgres]
+
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: litellm
+      POSTGRES_PASSWORD: changeme
+      POSTGRES_DB: litellm
+    ports: ["5432:5432"]
+    volumes:
+      - litellm_pg:/var/lib/postgresql/data
+
+  # 관측(선택). 프로파일로 켠다: docker compose --profile obs up
+  langfuse:
+    image: langfuse/langfuse:latest
+    profiles: [obs]
+    ports: ["3000:3000"]
+    env_file: .env
+    depends_on: [postgres]
+
+volumes:
+  litellm_pg:

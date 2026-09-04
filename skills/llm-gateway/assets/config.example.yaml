@@ -1,0 +1,76 @@
+# LiteLLM 게이트웨이 설정 예시. 시크릿은 모두 os.environ/ 참조다. .env.example 과 1:1.
+# 배포 전 검사: python -m litellm_ops config-validate config.yaml (또는 litellm-ops config_validate).
+model_list:
+  # Azure gpt-4o 두 리전(같은 model_name 으로 로드밸런싱)
+  - model_name: gpt-4o
+    litellm_params:
+      model: azure/gpt-4o
+      api_base: os.environ/AZURE_API_BASE_KR
+      api_key: os.environ/AZURE_API_KEY_KR
+      api_version: "2024-08-01-preview"
+      rpm: 300
+  - model_name: gpt-4o
+    litellm_params:
+      model: azure/gpt-4o
+      api_base: os.environ/AZURE_API_BASE_JP
+      api_key: os.environ/AZURE_API_KEY_JP
+      api_version: "2024-08-01-preview"
+      rpm: 300
+
+  # Bedrock Claude (폴백 후보)
+  - model_name: claude-sonnet
+    litellm_params:
+      model: bedrock/anthropic.claude-3-5-sonnet-20241022-v2:0
+      aws_region_name: us-east-1
+
+  # Vertex Gemini
+  - model_name: gemini
+    litellm_params:
+      model: vertex_ai/gemini-1.5-pro
+      vertex_project: os.environ/GCP_PROJECT
+      vertex_location: us-central1
+
+  # 사내 vLLM
+  - model_name: internal-llm
+    litellm_params:
+      model: hosted_vllm/Qwen2.5-32B-Instruct
+      api_base: os.environ/VLLM_BASE_URL
+
+  # 임베딩
+  - model_name: embed
+    litellm_params:
+      model: azure/text-embedding-3-small
+      api_base: os.environ/AZURE_API_BASE_KR
+      api_key: os.environ/AZURE_API_KEY_KR
+
+litellm_settings:
+  drop_params: true
+  num_retries: 2
+  request_timeout: 30
+  # 제공자 장애 시 폴백. 폴백 모델도 골든 테스트에 넣는다.
+  fallbacks:
+    - gpt-4o: [claude-sonnet, gemini]
+    - claude-sonnet: [gemini]
+  context_window_fallbacks:
+    - gpt-4o: [claude-sonnet]
+  # 관측: Langfuse 로 프롬프트·비용을 남긴다(키는 환경변수).
+  # success_callback: ["langfuse"]
+  # 캐시: 같은 입력 반복 시 비용 절감(redis).
+  # cache: true
+
+router_settings:
+  routing_strategy: simple-shuffle
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  database_url: os.environ/DATABASE_URL
+  background_health_checks: true
+  health_check_interval: 300
+  # alerting: ["slack"]
+
+# 가드레일 예시(주석). 입력·출력 정책을 게이트웨이에서 공통 적용.
+# guardrails:
+#   - guardrail_name: pii-mask
+#     litellm_params:
+#       guardrail: presidio
+#       mode: pre_call

@@ -5,17 +5,18 @@ requires-python = ">=3.12"
 dependencies = []
 
 [dependency-groups]
-dev = ["pytest>=8,<9", "pytest-cov>=5", "ruff>=0.6", "jsonschema>=4.20,<5", "PyYAML>=6,<7", "docgen"]
+dev = ["pytest>=8,<9", "pytest-cov>=5", "ruff>=0.6", "jsonschema>=4.20,<5", "PyYAML>=6,<7", "docgen", "litellm-ops"]
 
-# M1: mcp/docgen 을 workspace member 로 추가. mcp/litellm_ops 는 M3.
+# M1: mcp/docgen, M3: mcp/litellm_ops 를 workspace member 로.
 [tool.uv.workspace]
-members = ["mcp/docgen"]
+members = ["mcp/docgen", "mcp/litellm_ops"]
 
 [tool.uv.sources]
 docgen = { workspace = true }
+litellm-ops = { workspace = true }
 
 [tool.pytest.ini_options]
-testpaths = ["tests", "mcp/docgen/tests"]
+testpaths = ["tests", "mcp/docgen/tests", "mcp/litellm_ops/tests"]
 addopts = "-q --strict-markers --strict-config"
 markers = [
     "deterministic: 어디서나 실행",

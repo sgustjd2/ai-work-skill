@@ -1,0 +1,20 @@
+# AI 트렌드 브리프의 출처 목록. 관련도는 STYLE.md 1절의 서비스 목록으로 판단한다.
+official_blogs:
+  - https://openai.com/news/
+  - https://www.anthropic.com/news
+  - https://blog.google/technology/ai/
+  - https://ai.meta.com/blog/
+  - https://azure.microsoft.com/en-us/blog/
+  - https://aws.amazon.com/blogs/machine-learning/
+releases:
+  - https://github.com/BerriAI/litellm/releases
+  - https://github.com/vllm-project/vllm/releases
+  - https://github.com/fastapi/fastapi/releases
+  - https://github.com/langchain-ai/langgraph/releases
+papers:
+  - https://arxiv.org/list/cs.CL/recent
+  - https://arxiv.org/list/cs.AI/recent
+  - https://huggingface.co/papers
+community:
+  - https://huggingface.co/blog
+  - https://github.com/trending/python?since=weekly
