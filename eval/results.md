@@ -17,6 +17,17 @@
 
 재현 중 `doc_lint` S16(존댓말 혼용)이 경어 `~합니다` 를 평서문으로 오탐하던 버그를 고쳤다(경어 문서 전부에 영향). 정규식을 `~니다.` 전체로 넓히고 이중 차감을 없앴다.
 
+## MCP 이식성 검증 (2026-09-04)
+
+Claude 가 아닌 범용 MCP stdio 클라이언트로 두 서버에 붙여 확인했다. Codex·Gemini·Grok 이 MCP 서버에 붙는 방식이 이 방식이다.
+
+| 서버 | initialize | 프로토콜 | tools/list | tools/call |
+|---|---|---|---|---|
+| docgen | OK | 2025-06-18 | 11툴 | theme_export 정상 |
+| litellm-ops | OK | 2025-06-18 | 12툴 | config_validate ok:true |
+
+Codex CLI 는 이 PC 에 없어 `codex plugin marketplace add` 는 실행하지 못했다. 매니페스트(`.codex-plugin/plugin.json`)는 JSON 유효를 확인했다.
+
 ## check_output 기준선
 
 `mcp/docgen/fixtures/` 의 설계서(`design.doc.md`)와 덱(`gateway.deck.md`)을 렌더링해 `check_output.py` 로 검사한 결과다. 이 두 파일은 스킬이 만드는 문서·덱의 대표 형태다.

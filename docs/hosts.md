@@ -15,8 +15,10 @@
 
 ## 검증 상태
 
-- 확인됨: 이 저장소에서 실제로 실행한 것. MCP 서버 두 개의 툴 노출, 스크립트 전부, Claude Code 경로.
-- 문서상: 각 호스트 문서가 지원한다고 밝힌 것. Codex·Gemini·Grok 의 MCP·스킬 연결 방식은 문서상이며 이 세션에서 실행하지 않았다.
+- 확인됨: 이 저장소에서 실제로 실행한 것.
+  - Claude Code 경로, 스크립트 전부.
+  - **MCP 두 서버를 Claude 가 아닌 범용 MCP stdio 클라이언트로 붙여 확인했다.** 표준 JSON-RPC 핸드셰이크(`initialize` → `notifications/initialized` → `tools/list` → `tools/call`)가 프로토콜 2025-06-18 로 성공했다. docgen 11툴·litellm-ops 12툴이 노출되고, `theme_export`·`config_validate` 호출이 정상 응답했다. Codex·Gemini·Grok 이 붙는 방식이 이 방식이므로, MCP 연결은 어느 호스트에서도 동작한다.
+- 문서상: 각 호스트 CLI 의 구체 명령(플러그인 등록·설치)과 스킬 자동 로드 방식. 호스트 CLI 가 이 PC 에 없어 실행하지 않았다.
 
 호스트 CLI 는 버전마다 명령이 바뀐다. 아래 명령은 형식이며, 각 호스트의 최신 문서로 확인한다.
 
