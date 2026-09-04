@@ -1,1 +1,1 @@
-"""구성도 렌더러: 공통 레이아웃(layout) + 3종 출력(mermaid, pptx 도형, PNG)."""
+"""구성도·타임라인 렌더링. 공통 레이아웃(layout) → mermaid/png/svg/pptx 백엔드."""

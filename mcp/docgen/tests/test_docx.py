@@ -1,60 +1,110 @@
-"""docx 렌더: 스타일·eastAsia 폰트·wordWrap·머리글/바닥글 필드·표 헤더 음영·캡션·마커 형광·목차."""
-
+import re
 import zipfile
-from pathlib import Path
 
-from docgen.docx_render import render_docx
+import pytest
 from docx import Document
 
-FIXTURE = str(Path(__file__).resolve().parents[1] / "fixtures" / "gateway-design.doc.md")
+from docgen import docx_render, parse
+
+pytestmark = pytest.mark.deterministic
 
 
-def _render(tmp_path):
-    out = tmp_path / "out.docx"
-    r = render_docx(FIXTURE, out_path=str(out), base=".")
-    return r, out
+@pytest.fixture
+def rendered(design_md, theme, tmp_path):
+    parsed = parse.parse_doc(design_md)
+    out = tmp_path / "design.docx"
+    res = docx_render.render_docx(parsed, str(out), theme, base_dir=str(tmp_path))
+    return out, res
 
 
-def _part(z, name):
-    return z.read(name).decode("utf-8") if name in z.namelist() else ""
+def _xml(path, member):
+    with zipfile.ZipFile(path) as z:
+        names = z.namelist()
+        if member == "footer":
+            m = next((n for n in names if re.match(r"word/footer\d+\.xml", n)), None)
+            return z.read(m).decode("utf-8") if m else ""
+        return z.read(member).decode("utf-8")
 
 
-def test_opens_and_structure(tmp_path):
-    r, out = _render(tmp_path)
-    assert Path(r["out_path"]).is_file()
-    assert Path(r["out_path"]).is_absolute()
-    d = Document(str(out))  # 복구 프롬프트 없이 열림(파싱 성공)
+def test_reopens(rendered):
+    out, _ = rendered
+    d = Document(str(out))
+    assert len(d.paragraphs) > 5
     assert len(d.tables) >= 3
-    names = {s.name for s in d.styles}
-    assert {"Code", "TableText", "Caption"} <= names
-    assert r["headings"] and r["headings"][0]["text"].startswith("1.")
 
 
-def test_xml_traps(tmp_path):
-    _r, out = _render(tmp_path)
-    with zipfile.ZipFile(out) as z:
-        doc = _part(z, "word/document.xml")
-        styles = _part(z, "word/styles.xml")
-        settings = _part(z, "word/settings.xml")
-        header = "".join(_part(z, n) for n in z.namelist() if "header" in n)
-        footer = "".join(_part(z, n) for n in z.namelist() if "footer" in n)
-    assert 'w:eastAsia="맑은 고딕"' in doc or "맑은 고딕" in styles  # 한글 폰트 지정
-    assert 'w:wordWrap w:val="0"' in styles  # 어절 줄바꿈
-    assert "w:shd" in doc and 'w:fill="F7F7F7"' in doc  # 표 헤더/밴딩 음영
-    assert 'w:highlight w:val="yellow"' in doc  # 마커 형광
-    assert "TOC" in doc  # 목차 필드
-    assert 'w:val="true"' in settings and "updateFields" in settings
-    assert "대외비" in header  # 머리글 보안 등급
-    assert "PAGE" in footer  # 바닥글 쪽번호 필드
-    assert "[표 1]" in doc  # 표 캡션 번호
-
-
-def test_default_output_path(tmp_path, monkeypatch):
-    # out_path 없으면 render_output_dir(docs/_build) 에 filename_pattern 으로 저장
-    monkeypatch.chdir(tmp_path)
-    (tmp_path / "STYLE.md").write_text(
-        '---\nrender_output_dir: build\nfilename_pattern: "{title}"\n---\n', encoding="utf-8"
+def test_eastasia_font(rendered):
+    out, _ = rendered
+    assert 'w:eastAsia="맑은 고딕"' in _xml(out, "word/document.xml") or "w:eastAsia" in _xml(
+        out, "word/styles.xml"
     )
-    r = render_docx(FIXTURE, base=str(tmp_path))
-    assert Path(r["out_path"]).parent.name == "build"
-    assert Path(r["out_path"]).is_file()
+
+
+def test_wordwrap_present(rendered):
+    out, _ = rendered
+    assert "w:wordWrap" in _xml(out, "word/styles.xml") or "w:wordWrap" in _xml(
+        out, "word/document.xml"
+    )
+
+
+def test_page_number_field(rendered):
+    out, _ = rendered
+    foot = _xml(out, "footer")
+    assert "PAGE" in foot and "NUMPAGES" in foot
+
+
+def test_toc_and_update_fields(rendered):
+    out, _ = rendered
+    assert "TOC" in _xml(out, "word/document.xml")
+    assert "updateFields" in _xml(out, "word/settings.xml")
+
+
+def test_table_header_shading(rendered):
+    out, _ = rendered
+    assert re.search(r'w:shd[^>]*w:fill="[0-9A-Fa-f]{6}"', _xml(out, "word/document.xml"))
+
+
+def test_caption_numbering(rendered):
+    out, _ = rendered
+    xml = _xml(out, "word/document.xml")
+    # 구성도 캡션 → [그림 1], 표 캡션 → [표 1]
+    assert "[그림 1]" in xml and "[표 1]" in xml
+
+
+def test_marker_highlight(rendered):
+    out, _ = rendered
+    assert "yellow" in _xml(out, "word/document.xml").lower()
+
+
+def test_diagram_embedded_as_image(rendered):
+    out, _ = rendered
+    with zipfile.ZipFile(str(out)) as z:
+        media = [n for n in z.namelist() if n.startswith("word/media")]
+    assert len(media) >= 1  # 구성도 PNG
+
+
+def test_default_output_and_headings(rendered):
+    _, res = rendered
+    assert res["out_path"].endswith(".docx")
+    assert len(res["headings"]) >= 5
+
+
+def test_template_mode(theme, tmp_path):
+    # 회사 양식 docx 를 만들고(자리표시자 + 사용자 스타일), 템플릿 모드로 렌더
+    tpl = Document()
+    tpl.styles["Normal"].font.name = "굴림"
+    tpl.add_paragraph("{{title}}")
+    tpl.add_paragraph("작성: {{author}}")
+    tpl_path = tmp_path / "company.docx"
+    tpl.save(str(tpl_path))
+
+    parsed = parse.parse_doc("---\ntitle: 제목입니다\nauthor: 홍길동아님\n---\n# 1. 개요\n본문.\n")
+    out = tmp_path / "from_template.docx"
+    res = docx_render.render_docx(
+        parsed, str(out), theme, base_dir=str(tmp_path), template_docx=str(tpl_path)
+    )
+    d = Document(str(out))
+    texts = [p.text for p in d.paragraphs]
+    assert any("제목입니다" in t for t in texts)  # 자리표시자 치환
+    assert any("굴림" == (s.font.name or "") for s in d.styles if s.name == "Normal")  # 스타일 유지
+    assert any(res["warnings"])

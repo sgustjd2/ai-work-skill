@@ -5,7 +5,7 @@ FastAPI 서비스 골격, GitLab CI/CD, 코드 리뷰·테스트·리팩토링, 
 문서는 데이타솔루션 팔레트와 한국 기업 문서체로 나오고, AI 문체는 훅이 파일에 닿기 전에 차단한다.
 
 - 설계 문서: [docs/PRD.md](docs/PRD.md)
-- 상태: **M0 완료** (2026-09-04). 골격 계층(STYLE.md·테마·doc_lint 훅·install.py·ai-init·doc-write)이 동작한다. 하드 룰 H1~H10 과 소프트 룰 S1~S18, 3개 CLI 모드가 모두 있고, 저장소 자기 검사에서 하드 위반 0 이다. 검증: `uv run pytest` 72 PASS, `ruff check`·`format --check` clean, `doc_lint --all docs skills README.md` 하드 0. 골든 프롬프트 검사는 M1(docgen) 이후. 미해결 결정 없음(§14 추천값 적용). 다음은 M1 문서 생성(docgen). 구현은 Claude Opus 4.8이 PRD와 [CLAUDE.md](CLAUDE.md)만 보고 진행한다.
+- 상태: **M0·M1 완료** (2026-09-04). M0 골격 계층(STYLE.md·테마·doc_lint 훅·install.py·ai-init·doc-write)에 더해, M1 문서 생성 엔진 `docgen` 이 동작한다. `.doc.md` → docx(표지·목차·구성도·표·캡션), `.deck.md` → pptx(레이아웃 10종·헤드 메시지·네이티브 차트·구성도 도형), 구성도 3백엔드(mermaid·svg·png), MCP 서버 11툴 + 동일 CLI, 미리보기·양식 추출·`diagram_from_compose`, 회사 docx/pptx 템플릿 모드. 검증: `uv run pytest` 125 PASS(M0 72 + docgen 53), `ruff check`·`format --check` clean, `doc_lint --all docs skills README.md mcp/docgen/fixtures` 하드 0, 설계서 docx·게이트웨이 덱 pptx 실제 렌더(복구 없이 열림). 미해결 결정 없음(§14 추천값 적용). 다음은 M2 개발 스킬(fastapi-service·gitlab-ci·py-test·py-review·py-refactor). 구현은 Claude Opus 4.8이 PRD와 [CLAUDE.md](CLAUDE.md)만 보고 진행한다.
 - 외부 사실 출처: [docs/research/sources-2026-09-04.md](docs/research/sources-2026-09-04.md)
 - 선행 자산: `../ui-skill-set`(구조·훅·설치기 원형), `../품의서/.claude/skills/review-report-writer`(문체 규칙 원형)
 

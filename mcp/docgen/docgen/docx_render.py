@@ -1,533 +1,665 @@
-"""`.doc.md` -> docx. 표지·개정이력·목차·머리글/바닥글·쪽번호·스타일 6종·표·코드·그림·마커 형광.
+"""블록 모델 → docx (FR-10). 표지·개정이력·목차·머리글/바닥글·스타일·표·구성도·캡션·마커.
 
-함정 대응(10.5): East Asian 폰트(w:eastAsia), 어절 줄바꿈(w:wordWrap=0), 목차 필드+updateFields,
-표 헤더 음영·반복, 캡션 번호. 색·폰트·치수는 테마 JSON 에서만 온다.
+색·폰트·치수는 테마에서만 온다(소스에 hex 리터럴 없음). 한글은 rFonts w:eastAsia 를 직접
+지정해야 지정 폰트로 나온다.
 """
 
 from __future__ import annotations
 
 import re
+import tempfile
 from pathlib import Path
 
 from docx import Document
-from docx.enum.style import WD_STYLE_TYPE
 from docx.enum.table import WD_TABLE_ALIGNMENT
-from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_COLOR_INDEX, WD_LINE_SPACING
+from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_COLOR_INDEX
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Mm, Pt, RGBColor
 
-from . import core
-from .diagram import mermaid
-from .parse import parse_doc, runs_text
-from .theme import color as theme_color
-from .theme import load_theme
+from . import theme as T
+from .diagram import mermaid, png
 
-_NUM_RE = re.compile(r"^\s*[\d,]+(?:\.\d+)?%?\s*$")
+_PLACEHOLDER = re.compile(r"\[[^\]]*(?:확인 필요|입력 필요|추가 필요|금액|일정)[^\]]*\]")
+_TITLE_FIELD = re.compile(r"\{\{\s*(title|subtitle|date|author|version|org|security)\s*\}\}")
 
 
-def _rgb(hexstr):
-    return RGBColor.from_string(hexstr.lstrip("#"))
+# ─── 저수준 헬퍼 ─────────────────────────────────────────────────────────────
+def _set_rfonts(rpr, name: str) -> None:
+    rf = rpr.find(qn("w:rFonts"))
+    if rf is None:
+        rf = OxmlElement("w:rFonts")
+        rpr.insert(0, rf)
+    for a in ("w:ascii", "w:hAnsi", "w:eastAsia", "w:cs"):
+        rf.set(qn(a), name)
 
 
-def _set_ea(rpr, name):
-    rfonts = rpr.find(qn("w:rFonts"))
-    if rfonts is None:
-        rfonts = OxmlElement("w:rFonts")
-        rpr.insert(0, rfonts)
-    for attr in ("w:ascii", "w:hAnsi", "w:eastAsia", "w:cs"):
-        rfonts.set(qn(attr), name)
-
-
-def _run_ea(run, name):
-    run.font.name = name
-    _set_ea(run._r.get_or_add_rPr(), name)
-
-
-def _shade(element, fill_hex):
-    """문단/셀 pPr·tcPr 에 배경 음영."""
-    shd = OxmlElement("w:shd")
-    shd.set(qn("w:val"), "clear")
-    shd.set(qn("w:fill"), fill_hex.lstrip("#"))
-    element.append(shd)
-
-
-def _field(paragraph, instr):
-    run = paragraph.add_run()
-    for kind, txt in (("begin", None), ("instr", instr), ("end", None)):
-        if kind == "instr":
-            el = OxmlElement("w:instrText")
-            el.set(qn("xml:space"), "preserve")
-            el.text = txt
-        else:
-            el = OxmlElement("w:fldChar")
-            el.set(qn("w:fldCharType"), kind)
-        run._r.append(el)
-
-
-def _ensure_style(doc, name, base="Normal"):
-    try:
-        return doc.styles[name]
-    except KeyError:
-        st = doc.styles.add_style(name, WD_STYLE_TYPE.PARAGRAPH)
-        st.base_style = doc.styles[base]
-        return st
-
-
-def _cfg_style(style, font, size_pt, color_hex=None, ea=True, bold=False):
-    style.font.name = font
+def _style_font(style, name, size_pt, color_hex=None, bold=False):
+    style.font.name = name
     style.font.size = Pt(size_pt)
     style.font.bold = bold
     if color_hex:
-        style.font.color.rgb = _rgb(color_hex)
-    if ea:
-        _set_ea(style.element.get_or_add_rPr(), font)
+        style.font.color.rgb = RGBColor.from_string(color_hex)
+    _set_rfonts(style.element.get_or_add_rPr(), name)
 
 
-def _setup_styles(doc, theme, font, mono):
-    dx = theme["docx"]
-
-    def col(role):
-        return theme_color(theme, role)
-
-    normal = doc.styles["Normal"]
-    _cfg_style(normal, font, dx["body_pt"], col("ink"))
-    pf = normal.paragraph_format
-    pf.line_spacing_rule = WD_LINE_SPACING.MULTIPLE
-    pf.line_spacing = dx.get("line_spacing", 1.6)
-    pf.space_after = Pt(dx.get("para_after_pt", 6))
-    ww = OxmlElement("w:wordWrap")
-    ww.set(qn("w:val"), "0")
-    normal.element.get_or_add_pPr().append(ww)
-
-    for name, size in (
-        ("Heading 1", dx["h1_pt"]),
-        ("Heading 2", dx["h2_pt"]),
-        ("Heading 3", dx["h3_pt"]),
-    ):
-        st = doc.styles[name]
-        _cfg_style(st, font, size, col(dx.get("heading_color", "primary")), bold=True)
-        st.paragraph_format.space_before = Pt(size * 0.9)
-        st.paragraph_format.space_after = Pt(size * 0.35)
-
-    _cfg_style(_ensure_style(doc, "Caption"), font, dx.get("caption_pt", 9), col("ink_subtle"))
-    code = _ensure_style(doc, "Code")
-    _cfg_style(code, mono, dx.get("code_pt", 9), col("ink"), ea=False)
-    _shade(code.element.get_or_add_pPr(), col("surface"))
-    _cfg_style(_ensure_style(doc, "TableText"), font, dx.get("table_pt", 9.5), col("ink"))
-    try:
-        _cfg_style(doc.styles["Quote"], font, dx["body_pt"], col("ink_muted"))
-    except KeyError:
-        pass
+def _ppr_keep_korean(style):
+    """어절 단위 줄바꿈 관련 속성. [확인 필요] Word/PowerPoint 실측으로 확정(PRD D14)."""
+    ppr = style.element.get_or_add_pPr()
+    for tag, val in (("w:wordWrap", "1"), ("w:kinsoku", "1"), ("w:overflowPunct", "1")):
+        el = ppr.find(qn(tag))
+        if el is None:
+            el = OxmlElement(tag)
+            ppr.append(el)
+        el.set(qn("w:val"), val)
 
 
-def _add_runs(p, runs, ctx):
-    for r in runs:
-        if r.get("kind") == "image":
-            continue
-        is_code = r.get("kind") == "code"
-        for seg, is_marker in _split_marker(r.get("text", ""), ctx["marker_re"]):
-            if not seg:
-                continue
-            run = p.add_run(seg)
-            _run_ea(run, ctx["mono"] if is_code else ctx["font"])
-            if not is_code:
-                run.bold = bool(r.get("bold"))
-                run.italic = bool(r.get("italic"))
-                if r.get("strike"):
-                    run.font.strike = True
-                if r.get("link"):
-                    run.font.color.rgb = _rgb(ctx["action"])
-                    run.font.underline = True
-            if is_marker:  # 마커는 코드/본문 어디서든 형광(10.5)
-                run.font.highlight_color = WD_COLOR_INDEX.YELLOW
+def _run(
+    paragraph,
+    text,
+    font_name,
+    *,
+    bold=False,
+    italic=False,
+    mono=None,
+    color_hex=None,
+    highlight=False,
+    size_pt=None,
+):
+    run = paragraph.add_run(text)
+    run.font.name = mono or font_name
+    run.font.bold = bold
+    run.font.italic = italic
+    if size_pt:
+        run.font.size = Pt(size_pt)
+    if color_hex:
+        run.font.color.rgb = RGBColor.from_string(color_hex)
+    if highlight:
+        run.font.highlight_color = WD_COLOR_INDEX.YELLOW
+    _set_rfonts(run._element.get_or_add_rPr(), mono or font_name)
+    return run
 
 
-def _split_marker(text, marker_re):
-    out, i = [], 0
-    for m in marker_re.finditer(text):
-        if m.start() > i:
-            out.append((text[i : m.start()], False))
-        out.append((m.group(), True))
-        i = m.end()
-    out.append((text[i:], False))
-    return out
+def _field(paragraph, instr):
+    r = paragraph.add_run()
+    fb = OxmlElement("w:fldChar")
+    fb.set(qn("w:fldCharType"), "begin")
+    it = OxmlElement("w:instrText")
+    it.set(qn("xml:space"), "preserve")
+    it.text = instr
+    fe = OxmlElement("w:fldChar")
+    fe.set(qn("w:fldCharType"), "end")
+    r._element.append(fb)
+    r._element.append(it)
+    r._element.append(fe)
 
 
-def _add_table(doc, block, ctx, counters):
-    if block.get("caption"):
-        counters["table"] += 1
-        cap = doc.add_paragraph(style="Caption")
-        cap.add_run(f"[표 {counters['table']}] {block['caption']}")
-    header = block["header"]
-    rows = block["rows"]
-    ncol = len(header)
-    table = doc.add_table(rows=1, cols=ncol)
-    table.style = "Table Grid"
-    table.alignment = WD_TABLE_ALIGNMENT.CENTER
-    numeric = _numeric_cols(header, rows)
-    hdr = table.rows[0].cells
-    for j, cell_runs in enumerate(header):
-        _fill_cell(hdr[j], runs_text(cell_runs), ctx, header=True, right=j in numeric)
-    _repeat_header(table.rows[0])
-    for ri, row in enumerate(rows):
-        cells = table.add_row().cells
-        for j in range(ncol):
-            txt = runs_text(row[j]) if j < len(row) and row[j] else ""
-            _fill_cell(cells[j], txt, ctx, header=False, right=j in numeric, band=(ri % 2 == 1))
-
-
-def _numeric_cols(header, rows):
-    out = set()
-    for j in range(len(header)):
-        vals = [runs_text(r[j]) for r in rows if j < len(r) and r[j]]
-        if vals and all(_NUM_RE.match(v) for v in vals):
-            out.add(j)
-    return out
-
-
-def _fill_cell(cell, text, ctx, header, right, band=False):
-    cell.text = ""
-    p = cell.paragraphs[0]
-    p.style = cell.part.document.styles["TableText"]
-    p.paragraph_format.space_after = Pt(0)
-    if right:
-        p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-    run = p.add_run(text)
-    _run_ea(run, ctx["font"])
-    if header:
-        run.bold = True
-        run.font.color.rgb = _rgb(ctx["table_header_text"])
-        _shade(cell._tc.get_or_add_tcPr(), ctx["table_header_fill"])
-    elif band:
-        _shade(cell._tc.get_or_add_tcPr(), ctx["surface"])
+def _shade(cell, hex_no_hash):
+    shd = OxmlElement("w:shd")
+    shd.set(qn("w:val"), "clear")
+    shd.set(qn("w:fill"), hex_no_hash)
+    cell._element.get_or_add_tcPr().append(shd)
 
 
 def _repeat_header(row):
-    trPr = row._tr.get_or_add_trPr()
+    trpr = row._tr.get_or_add_trPr()
     th = OxmlElement("w:tblHeader")
     th.set(qn("w:val"), "true")
-    trPr.append(th)
+    trpr.append(th)
 
 
-def _add_toc(doc):
-    p = doc.add_paragraph()
-    fld = OxmlElement("w:fldSimple")
-    fld.set(qn("w:instr"), 'TOC \\o "1-3" \\h \\z \\u')
-    r = OxmlElement("w:r")
-    t = OxmlElement("w:t")
-    t.text = "목차 (문서를 열고 F9 로 갱신)"
-    r.append(t)
-    fld.append(r)
-    p._p.append(fld)
-
-
-def _update_fields(doc):
-    el = OxmlElement("w:updateFields")
-    el.set(qn("w:val"), "true")
-    doc.settings.element.append(el)
-
-
-def _rule(doc, color_hex):
-    p = doc.add_paragraph()
-    pPr = p._p.get_or_add_pPr()
+def _rule(paragraph, hex_no_hash, size=18):
+    ppr = paragraph._p.get_or_add_pPr()
     pbdr = OxmlElement("w:pBdr")
     bottom = OxmlElement("w:bottom")
-    bottom.set(qn("w:val"), "single")
-    bottom.set(qn("w:sz"), "18")
-    bottom.set(qn("w:space"), "1")
-    bottom.set(qn("w:color"), color_hex.lstrip("#"))
+    for a, v in (
+        ("w:val", "single"),
+        ("w:sz", str(size)),
+        ("w:space", "1"),
+        ("w:color", hex_no_hash),
+    ):
+        bottom.set(qn(a), v)
     pbdr.append(bottom)
-    pPr.append(pbdr)
-    return p
+    ppr.append(pbdr)
 
 
-def render_docx(spec_path, out_path=None, theme=None, template_docx=None, base=None):
-    bdir = core.base_dir(base)
-    doc_data = parse_doc(spec_path)
-    fm = doc_data["frontmatter"]
-    style = core.load_style(bdir)
-    th = load_theme(core.theme_name(fm, style, theme), bdir)
-    font = fm.get("office_font") or style.get("office_font") or th["fonts"]["office_ko"]
-    mono = th["fonts"].get("mono", "Consolas")
-    warnings = []
+# ─── 스타일 정의 ─────────────────────────────────────────────────────────────
+def _define_styles(doc, theme):
+    ko = T.font(theme, "office_ko")
+    mono = T.font(theme, "mono")
+    d = theme["docx"]
+    ink = T.rgb_hex(theme, "ink")
+    head = T.rgb_hex(theme, d.get("heading_color", "primary"))
 
-    doc = Document()
-    _setup_section(doc, th)
-    _setup_styles(doc, th, font, mono)
+    normal = doc.styles["Normal"]
+    _style_font(normal, ko, d["body_pt"], ink)
+    normal.paragraph_format.line_spacing = d.get("line_spacing", 1.5)
+    normal.paragraph_format.space_after = Pt(d.get("para_after_pt", 6))
+    _ppr_keep_korean(normal)
 
-    ctx = {
-        "font": font,
-        "mono": mono,
-        "action": theme_color(th, "action"),
-        "surface": theme_color(th, "surface"),
-        "table_header_fill": theme_color(th, th["docx"].get("table_header_fill", "surface")),
-        "table_header_text": theme_color(th, th["docx"].get("table_header_text", "primary")),
-        "marker_re": core.marker_pattern(style),
-    }
-    _header_footer(doc, fm, style, th, font)
-    _title_page(doc, fm, style, th, font, bdir, warnings)
-    _history(doc, fm, ctx, th)
-    if fm.get("toc", True):
-        doc.add_paragraph("목차", style="Heading 1")
-        _add_toc(doc)
-        _update_fields(doc)
-    doc.add_page_break()
+    for name, size in (
+        ("Heading 1", d["h1_pt"]),
+        ("Heading 2", d["h2_pt"]),
+        ("Heading 3", d["h3_pt"]),
+    ):
+        st = doc.styles[name]
+        _style_font(st, ko, size, head, bold=True)
+        st.paragraph_format.space_before = Pt(size * 0.9)
+        st.paragraph_format.space_after = Pt(size * 0.35)
+        st.paragraph_format.keep_with_next = True
 
-    counters = {"table": 0, "figure": 0}
-    headings = []
-    for block in doc_data["blocks"]:
-        _render_block(doc, block, ctx, counters, headings, th, warnings, bdir)
+    def ensure(name, base="Normal"):
+        try:
+            return doc.styles[name]
+        except KeyError:
+            return doc.styles.add_style(name, 1)  # WD_STYLE_TYPE.PARAGRAPH
 
-    out = core.out_path_for(spec_path, fm, style, out_path, ".docx", bdir)
-    out.parent.mkdir(parents=True, exist_ok=True)
-    doc.save(str(out))
-    return {
-        "out_path": str(out.resolve()),
-        "pages_estimate": max(1, round(len(doc_data["blocks"]) / 8) + 1),
-        "headings": headings,
-        "warnings": warnings,
-    }
+    cap = ensure("Caption")
+    _style_font(cap, ko, d.get("caption_pt", 9), T.rgb_hex(theme, "ink_muted"))
+    code = ensure("CodeBlock")
+    _style_font(code, mono, d.get("code_pt", 9), ink)
+    quote = ensure("QuoteBlock")
+    _style_font(quote, ko, d["body_pt"], T.rgb_hex(theme, "ink_muted"))
+    tt = ensure("TableText")
+    _style_font(tt, ko, d.get("table_pt", 9.5), ink)
+    tt.paragraph_format.space_after = Pt(0)
+    tt.paragraph_format.line_spacing = 1.2
 
 
-def _setup_section(doc, theme):
-    dx = theme["docx"]
+# ─── 페이지·머리글·바닥글 ────────────────────────────────────────────────────
+def _page_setup(doc, theme, fm):
+    d = theme["docx"]
     sec = doc.sections[0]
-    if dx.get("page", "A4") == "A4":
-        sec.page_width = Mm(210)
-        sec.page_height = Mm(297)
-    m = dx.get("margins_mm", [25, 20, 25, 20])
-    sec.top_margin, sec.right_margin, sec.bottom_margin, sec.left_margin = (
-        Mm(m[0]),
-        Mm(m[1]),
-        Mm(m[2]),
-        Mm(m[3]),
-    )
+    top, right, bottom, left = d.get("margins_mm", [25, 20, 25, 20])
+    sec.page_width, sec.page_height = Mm(210), Mm(297)
+    sec.top_margin, sec.right_margin = Mm(top), Mm(right)
+    sec.bottom_margin, sec.left_margin = Mm(bottom), Mm(left)
 
-
-def _header_footer(doc, fm, style, theme, font):
-    sec = doc.sections[0]
+    ko = T.font(theme, "office_ko")
+    subtle = T.rgb_hex(theme, "ink_subtle")
     hp = sec.header.paragraphs[0]
-    hp.text = fm.get("title", "")
-    security = fm.get("security") or style.get("security")
-    if security:
-        tab = hp.add_run("\t" + str(security))
-        _run_ea(tab, font)
-    _run_ea(hp.runs[0], font) if hp.runs else None
     hp.paragraph_format.tab_stops.add_tab_stop(
-        sec.page_width - sec.left_margin - sec.right_margin, alignment=WD_ALIGN_PARAGRAPH.RIGHT
+        sec.page_width - sec.left_margin - sec.right_margin, WD_ALIGN_PARAGRAPH.RIGHT
     )
+    _run(hp, fm.get("title", ""), ko, color_hex=subtle, size_pt=8)
+    if fm.get("security"):
+        _run(hp, "\t" + str(fm["security"]), ko, color_hex=subtle, size_pt=8)
+
     fpar = sec.footer.paragraphs[0]
     fpar.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    _run(fpar, "", ko, color_hex=subtle, size_pt=9)
     _field(fpar, "PAGE")
-    fpar.add_run(" / ")
+    _run(fpar, " / ", ko, color_hex=subtle, size_pt=9)
     _field(fpar, "NUMPAGES")
-    for run in fpar.runs:
-        run.font.size = Pt(theme["docx"].get("caption_pt", 9))
-        run.font.color.rgb = _rgb(theme_color(theme, "ink_subtle"))
 
 
-def _title_page(doc, fm, style, theme, font, bdir, warnings):
-    logo = Path(bdir) / "docs" / "assets" / "logo.png"
-    if logo.is_file():
-        try:
-            doc.add_picture(str(logo), width=Mm(35))
-        except Exception:
-            warnings.append("로고 삽입 실패")
-    _rule(doc, theme_color(theme, "primary"))
-    title = doc.add_paragraph()
-    tr = title.add_run(fm.get("title", "제목 없음"))
-    tr.bold = True
-    tr.font.size = Pt(theme["docx"]["h1_pt"] + 8)
-    tr.font.color.rgb = _rgb(theme_color(theme, "primary"))
-    _run_ea(tr, font)
+def _enable_update_fields(doc):
+    el = doc.settings.element
+    uf = OxmlElement("w:updateFields")
+    uf.set(qn("w:val"), "true")
+    el.append(uf)
+
+
+# ─── 표지·개정이력·목차 ──────────────────────────────────────────────────────
+def _cover(doc, theme, fm, logo_path=None):
+    ko = T.font(theme, "office_ko")
+    primary = T.rgb_hex(theme, "primary")
+    if logo_path and Path(logo_path).exists():
+        doc.add_picture(logo_path, width=Mm(35))
+    rule_p = doc.add_paragraph()
+    _rule(rule_p, primary, size=24)
+    for _ in range(2):
+        doc.add_paragraph()
+    tp = doc.add_paragraph()
+    _run(
+        tp,
+        fm.get("title", "제목 없음"),
+        ko,
+        bold=True,
+        color_hex=primary,
+        size_pt=theme["docx"]["h1_pt"] + 8,
+    )
     if fm.get("subtitle"):
-        sub = doc.add_paragraph()
-        sr = sub.add_run(fm["subtitle"])
-        sr.font.color.rgb = _rgb(theme_color(theme, "ink_muted"))
-        _run_ea(sr, font)
+        sp = doc.add_paragraph()
+        _run(
+            sp,
+            str(fm["subtitle"]),
+            ko,
+            color_hex=T.rgb_hex(theme, "ink_muted"),
+            size_pt=theme["docx"]["h2_pt"],
+        )
+    for _ in range(3):
+        doc.add_paragraph()
     meta = [
-        ("조직", fm.get("org") or style.get("org", "")),
-        ("작성자", fm.get("author", "")),
+        ("조직", fm.get("org", "")),
+        ("작성", fm.get("author", "")),
         ("일자", str(fm.get("date", ""))),
         ("버전", str(fm.get("version", ""))),
     ]
-    t = doc.add_table(rows=0, cols=2)
+    tbl = doc.add_table(rows=0, cols=2)
     for k, v in meta:
         if not v:
             continue
-        cells = t.add_row().cells
-        for cell, txt, bold in ((cells[0], k, True), (cells[1], str(v), False)):
-            cell.text = ""
-            run = cell.paragraphs[0].add_run(txt)
-            run.bold = bold
-            _run_ea(run, font)
-    approvers = fm.get("approvers")
-    if approvers:
+        cells = tbl.add_row().cells
+        _cell_text(cells[0], f"{k}", theme, bold=True)
+        _cell_text(cells[1], f"{v}", theme)
+    if fm.get("approvers"):
         doc.add_paragraph()
-        at = doc.add_table(rows=2, cols=len(approvers))
-        at.style = "Table Grid"
-        for j, name in enumerate(approvers):
-            c = at.rows[0].cells[j]
-            c.text = ""
-            r = c.paragraphs[0].add_run(str(name))
-            r.bold = True
-            _run_ea(r, font)
+        ap = doc.add_paragraph()
+        _run(
+            ap,
+            "결재",
+            ko,
+            bold=True,
+            color_hex=T.rgb_hex(theme, "ink_muted"),
+            size_pt=theme["docx"]["body_pt"],
+        )
+        appr = fm["approvers"] if isinstance(fm["approvers"], list) else [fm["approvers"]]
+        t2 = doc.add_table(rows=2, cols=len(appr))
+        t2.style = "Table Grid"
+        for i, name in enumerate(appr):
+            _cell_text(t2.rows[0].cells[i], str(name), theme, bold=True, center=True)
+            _cell_text(t2.rows[1].cells[i], "", theme)
     doc.add_page_break()
 
 
-def _history(doc, fm, ctx, theme):
+def _history(doc, theme, fm):
     hist = fm.get("history")
     if not hist:
         return
-    doc.add_paragraph("개정 이력", style="Heading 1")
-    header = [[{"kind": "text", "text": h}] for h in ("버전", "일자", "작성자", "내용")]
-    rows = []
-    for h in hist:
-        if isinstance(h, dict):
-            rows.append(
-                [
-                    [{"kind": "text", "text": str(h.get(k, ""))}]
-                    for k in ("version", "date", "author", "note")
-                ]
+    ko = T.font(theme, "office_ko")
+    hp = doc.add_paragraph()
+    _run(
+        hp,
+        "개정 이력",
+        ko,
+        bold=True,
+        color_hex=T.rgb_hex(theme, "primary"),
+        size_pt=theme["docx"]["h3_pt"],
+    )
+    tbl = doc.add_table(rows=1, cols=4)
+    tbl.style = "Table Grid"
+    for i, h in enumerate(("버전", "일자", "작성자", "내용")):
+        _cell_text(tbl.rows[0].cells[i], h, theme, bold=True, center=True)
+        _shade(
+            tbl.rows[0].cells[i],
+            T.rgb_hex(theme, theme["docx"].get("table_header_fill", "surface")),
+        )
+    _repeat_header(tbl.rows[0])
+    for row in hist:
+        cells = tbl.add_row().cells
+        vals = [
+            row.get("version", ""),
+            row.get("date", ""),
+            row.get("author", ""),
+            row.get("note", ""),
+        ]
+        for c, v in zip(cells, vals, strict=False):
+            _cell_text(c, str(v), theme)
+    doc.add_paragraph()
+
+
+def _toc(doc, theme):
+    ko = T.font(theme, "office_ko")
+    p = doc.add_paragraph()
+    _run(
+        p,
+        "목차",
+        ko,
+        bold=True,
+        color_hex=T.rgb_hex(theme, "primary"),
+        size_pt=theme["docx"]["h3_pt"],
+    )
+    tp = doc.add_paragraph()
+    _field(tp, 'TOC \\o "1-3" \\h \\z \\u')
+    doc.add_page_break()
+
+
+# ─── 셀·표 ───────────────────────────────────────────────────────────────────
+def _cell_text(cell, text, theme, *, bold=False, center=False, right=False, runs=None):
+    cell.paragraphs[0].style = None
+    p = cell.paragraphs[0]
+    p.style = cell.part.document.styles["TableText"]
+    if center:
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    elif right:
+        p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    ko = T.font(theme, "office_ko")
+    if runs:
+        _emit_runs(p, runs, theme, base_bold=bold)
+    else:
+        _run(p, text, ko, bold=bold)
+
+
+# ─── 본문 블록 ───────────────────────────────────────────────────────────────
+def _emit_runs(paragraph, runs, theme, base_bold=False):
+    ko = T.font(theme, "office_ko")
+    mono = T.font(theme, "mono")
+    for r in runs:
+        text = r["text"]
+        parts = _PLACEHOLDER.split(text)
+        marks = _PLACEHOLDER.findall(text)
+        for i, seg in enumerate(parts):
+            if seg:
+                _run(
+                    paragraph,
+                    seg,
+                    ko,
+                    bold=r["bold"] or base_bold,
+                    italic=r["italic"],
+                    mono=mono if r["code"] else None,
+                )
+            if i < len(marks):
+                _run(paragraph, marks[i], ko, highlight=True)
+
+
+class DocxRenderer:
+    def __init__(self, theme, base_dir=None):
+        self.theme = theme
+        self.base_dir = Path(base_dir) if base_dir else Path.cwd()
+        self.warnings: list[str] = []
+        self._fig = 0
+        self._tab = 0
+        self._tmp: list[str] = []
+
+    def render(self, parsed, out_path, logo_path=None):
+        fm = parsed["frontmatter"]
+        doc = Document()
+        _define_styles(doc, self.theme)
+        _page_setup(doc, self.theme, fm)
+        _cover(doc, self.theme, fm, logo_path)
+        _history(doc, self.theme, fm)
+        if fm.get("toc", True):
+            _toc(doc, self.theme)
+            _enable_update_fields(doc)
+        headings = []
+        for b in parsed["blocks"]:
+            self._block(doc, b, headings)
+        self._footnotes(doc, parsed.get("footnotes", []))
+        Path(out_path).parent.mkdir(parents=True, exist_ok=True)
+        doc.save(out_path)
+        for t in self._tmp:
+            try:
+                Path(t).unlink()
+            except OSError:
+                pass
+        return {
+            "out_path": str(Path(out_path).resolve()),
+            "pages_estimate": max(1, len(parsed["blocks"]) // 6 + 2),
+            "headings": headings,
+            "warnings": self.warnings,
+        }
+
+    def _block(self, doc, b, headings):
+        t = b["type"]
+        if t == "heading":
+            lvl = min(b["level"], 3)
+            p = doc.add_paragraph(style=f"Heading {lvl}")
+            _emit_runs(p, b["runs"], self.theme)
+            headings.append({"level": b["level"], "text": b["text"]})
+        elif t == "paragraph":
+            p = doc.add_paragraph()
+            _emit_runs(p, b["runs"], self.theme)
+        elif t == "list":
+            self._list(doc, b)
+        elif t == "table":
+            self._table(doc, b)
+        elif t == "code":
+            self._code(doc, b)
+        elif t == "diagram":
+            self._diagram(doc, b)
+        elif t == "timeline":
+            self._timeline(doc, b)
+        elif t == "chart":
+            self._chart(doc, b)
+        elif t == "image":
+            self._image(doc, b)
+        elif t == "quote":
+            for inner in b["blocks"]:
+                if inner["type"] == "paragraph":
+                    p = doc.add_paragraph(style="QuoteBlock")
+                    _emit_runs(p, inner["runs"], self.theme)
+        elif t == "pagebreak":
+            doc.add_page_break()
+        elif t == "hr":
+            _rule(doc.add_paragraph(), T.rgb_hex(self.theme, "line"), size=6)
+
+    def _list(self, doc, b):
+        def emit(items, level):
+            for it in items:
+                style = "List Number" if b["ordered"] else "List Bullet"
+                if level > 0:
+                    style += f" {min(level + 1, 3)}"
+                try:
+                    p = doc.add_paragraph(style=style)
+                except KeyError:
+                    p = doc.add_paragraph(style="List Bullet")
+                _emit_runs(p, it["runs"], self.theme)
+                if it.get("children"):
+                    emit(it["children"], level + 1)
+
+        emit(b["items"], 0)
+
+    def _table(self, doc, b):
+        if b.get("caption"):
+            self._tab += 1
+            cap = doc.add_paragraph(style="Caption")
+            _run(
+                cap, f"[표 {self._tab}] {b['caption']}", T.font(self.theme, "office_ko"), bold=True
             )
-    _add_table(doc, {"header": header, "rows": rows, "caption": None}, ctx, {"table": 0})
+        header, rows, align = b["header"], b["rows"], b["align"]
+        ncol = len(header) or (len(rows[0]) if rows else 1)
+        tbl = doc.add_table(rows=1, cols=ncol)
+        tbl.style = "Table Grid"
+        tbl.alignment = WD_TABLE_ALIGNMENT.CENTER
+        for i in range(ncol):
+            runs = header[i] if i < len(header) else []
+            _cell_text(tbl.rows[0].cells[i], "", self.theme, bold=True, center=True, runs=runs)
+            _shade(
+                tbl.rows[0].cells[i],
+                T.rgb_hex(self.theme, self.theme["docx"].get("table_header_fill", "surface")),
+            )
+        _repeat_header(tbl.rows[0])
+        for row in rows:
+            cells = tbl.add_row().cells
+            for i in range(ncol):
+                runs = row[i] if i < len(row) else []
+                a = align[i] if i < len(align) else "left"
+                _cell_text(
+                    cells[i],
+                    "",
+                    self.theme,
+                    right=(a == "right"),
+                    center=(a == "center"),
+                    runs=runs,
+                )
 
+    def _code(self, doc, b):
+        p = doc.add_paragraph(style="CodeBlock")
+        _shade_paragraph(p, T.rgb_hex(self.theme, "surface"))
+        _run(p, b["text"], T.font(self.theme, "mono"), mono=T.font(self.theme, "mono"))
 
-def _render_block(doc, block, ctx, counters, headings, theme, warnings, bdir):
-    t = block["type"]
-    if t == "heading":
-        lvl = min(block["level"], 3)
-        doc.add_paragraph(block["text"], style=f"Heading {lvl}")
-        headings.append({"level": block["level"], "text": block["text"]})
-    elif t == "paragraph":
-        p = doc.add_paragraph()
-        _add_runs(p, block["runs"], ctx)
-    elif t == "list":
-        _render_list(doc, block, ctx, 0)
-    elif t == "table":
-        _add_table(doc, block, ctx, counters)
-    elif t == "code":
-        for line in block["content"].rstrip("\n").split("\n"):
-            para = doc.add_paragraph(style="Code")
-            run = para.add_run(line)
-            _run_ea(run, ctx["mono"])
-    elif t in ("diagram", "chart", "timeline"):
-        _render_special(doc, block, ctx, counters, theme, warnings, bdir)
-    elif t == "image":
-        _render_image(doc, block, counters, ctx, bdir, warnings)
-    elif t == "blockquote":
-        for b in block["blocks"]:
-            if b["type"] == "paragraph":
-                p = doc.add_paragraph(style="Quote")
-                _add_runs(p, b["runs"], ctx)
-            else:
-                _render_block(doc, b, ctx, counters, headings, theme, warnings, bdir)
-    elif t == "pagebreak":
-        doc.add_page_break()
+    def _image(self, doc, b):
+        src = b["src"]
+        path = Path(src)
+        if not path.is_absolute():
+            path = self.base_dir / src
+        if path.exists():
+            doc.add_picture(str(path), width=self._content_width(doc))
+        else:
+            self.warnings.append(f"그림 파일 없음: {src}")
+        self._figure_caption(doc, b.get("caption"))
 
+    def _diagram(self, doc, b):
+        tmp = Path(tempfile.gettempdir()) / f"docgen_diag_{id(b)}.png"
+        out, warns = png.to_png(b["spec"], self.theme, str(tmp), dpi=150)
+        self.warnings += warns
+        if out:
+            self._tmp.append(out)
+            doc.add_picture(out, width=self._content_width(doc))
+        else:
+            mm, _ = mermaid.to_mermaid(b["spec"], self.theme)
+            p = doc.add_paragraph(style="CodeBlock")
+            _run(
+                p,
+                "```mermaid\n" + mm + "\n```",
+                T.font(self.theme, "mono"),
+                mono=T.font(self.theme, "mono"),
+            )
+        self._figure_caption(doc, b.get("caption"))
 
-def _render_list(doc, block, ctx, depth):
-    style = "List Number" if block["ordered"] else "List Bullet"
-    for item in block["items"]:
-        for b in item:
-            if b["type"] == "paragraph":
-                p = doc.add_paragraph(style=style)
-                if depth:
-                    p.paragraph_format.left_indent = Mm(6 * depth)
-                _add_runs(p, b["runs"], ctx)
-            elif b["type"] == "list":
-                _render_list(doc, b, ctx, depth + 1)
-
-
-def _render_image(doc, block, counters, ctx, bdir, warnings):
-    path = Path(block["path"])
-    if not path.is_absolute():
-        path = Path(bdir) / path
-    sec = doc.sections[0]
-    maxw = sec.page_width - sec.left_margin - sec.right_margin
-    if path.is_file():
-        try:
-            doc.add_picture(str(path), width=maxw)
-        except Exception:
-            warnings.append(f"그림 삽입 실패: {block['path']}")
+    def _figure_caption(self, doc, text):
+        if not text:
             return
-    else:
-        warnings.append(f"그림 파일 없음: {block['path']}")
-        doc.add_paragraph(f"[그림 자리: {block['path']}]")
-    if block.get("caption"):
-        counters["figure"] += 1
+        self._fig += 1
         cap = doc.add_paragraph(style="Caption")
         cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        cap.add_run(f"[그림 {counters['figure']}] {block['caption']}")
+        _run(cap, f"[그림 {self._fig}] {text}", T.font(self.theme, "office_ko"))
 
+    def _timeline(self, doc, b):
+        tasks = b["spec"].get("tasks", [])
+        tbl_block = {
+            "type": "table",
+            "header": [[_r("항목")], [_r("시작")], [_r("종료")], [_r("비고")]],
+            "rows": [
+                [
+                    [_r(str(t.get("label", "")))],
+                    [_r(str(t.get("start", "")))],
+                    [_r(str(t.get("end", "")))],
+                    [_r(str(t.get("group", "")))],
+                ]
+                for t in tasks
+            ],
+            "align": ["left", "left", "left", "left"],
+            "caption": b.get("caption") or b["spec"].get("title"),
+        }
+        self._table(doc, tbl_block)
 
-def _render_special(doc, block, ctx, counters, theme, warnings, bdir):
-    t = block["type"]
-    if t == "diagram":
-        _render_diagram(doc, block, ctx, counters, theme, warnings)
-    else:
-        _chart_or_timeline_table(doc, block, ctx, counters)
-
-
-def _render_diagram(doc, block, ctx, counters, theme, warnings):
-    import tempfile
-
-    from .diagram import png
-
-    tmp = Path(tempfile.gettempdir()) / f"docgen_dia_{id(block):x}.png"
-    res = png.render_png(block["spec"], theme, str(tmp))
-    if res:
-        warnings.extend(res["warnings"])
-        sec = doc.sections[0]
-        maxw = sec.page_width - sec.left_margin - sec.right_margin
-        try:
-            doc.add_picture(str(tmp), width=maxw)
-        finally:
-            tmp.unlink(missing_ok=True)
-        counters["figure"] += 1
-        cap = doc.add_paragraph(style="Caption")
-        cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        cap.add_run(f"[그림 {counters['figure']}] 구성도")
-    else:
-        # 한글 폰트 미탐지: 문서가 깨지지 않게 mermaid 소스를 코드 블록으로(10.3)
-        warnings.append("구성도 PNG 폰트 미탐지: mermaid 소스로 대체(테마 font_paths 확인)")
-        for line in mermaid.to_mermaid(block["spec"], theme).rstrip("\n").split("\n"):
-            _run_ea(doc.add_paragraph(style="Code").add_run(line), ctx["mono"])
-
-
-def _chart_or_timeline_table(doc, block, ctx, counters):
-    spec = block.get("spec", {})
-    if block["type"] == "chart":
+    def _chart(self, doc, b):
+        spec = b["spec"]
         cats = spec.get("categories", [])
         series = spec.get("series", [])
-        header = [[{"kind": "text", "text": "구분"}]] + [
-            [{"kind": "text", "text": s.get("name", "")}] for s in series
-        ]
+        header = [[_r(spec.get("title", "차트"))]] + [[_r(s.get("name", ""))] for s in series]
         rows = []
-        for i, cat in enumerate(cats):
-            row = [[{"kind": "text", "text": str(cat)}]]
+        for i, c in enumerate(cats):
+            row = [[_r(str(c))]]
             for s in series:
                 vals = s.get("values", [])
-                row.append([{"kind": "text", "text": str(vals[i]) if i < len(vals) else ""}])
+                row.append([_r(str(vals[i]) if i < len(vals) else "")])
             rows.append(row)
-        title = spec.get("title", "차트")
         unit = spec.get("unit", "")
-        cap = f"{title} ({unit})" if unit else title
-        _add_table(doc, {"header": header, "rows": rows, "caption": cap}, ctx, counters)
-    else:  # timeline
-        tasks = spec.get("tasks", [])
-        header = [[{"kind": "text", "text": h}] for h in ("항목", "시작", "종료", "비고")]
-        rows = [
-            [
-                [{"kind": "text", "text": str(t.get(k, ""))}]
-                for k in ("label", "start", "end", "group")
-            ]
-            for t in tasks
-        ]
-        _add_table(
+        title = spec.get("title", "")
+        cap = b.get("caption") or (f"{title} ({unit})" if unit else title)
+        self._table(
             doc,
-            {"header": header, "rows": rows, "caption": spec.get("title", "일정")},
-            ctx,
-            counters,
+            {
+                "type": "table",
+                "header": header,
+                "rows": rows,
+                "align": ["left"] + ["right"] * len(series),
+                "caption": cap,
+            },
         )
+        if spec.get("source"):
+            sp = doc.add_paragraph(style="Caption")
+            _run(sp, f"출처: {spec['source']}", T.font(self.theme, "office_ko"))
+
+    def _footnotes(self, doc, footnotes):
+        if not footnotes:
+            return
+        doc.add_paragraph()
+        p = doc.add_paragraph(style="Heading 3")
+        _run(
+            p,
+            "참고",
+            T.font(self.theme, "office_ko"),
+            bold=True,
+            color_hex=T.rgb_hex(self.theme, "primary"),
+        )
+        for f in footnotes:
+            fp = doc.add_paragraph(style="Caption")
+            _run(fp, f"[{f['id']}] ", T.font(self.theme, "office_ko"), bold=True)
+            _emit_runs(fp, f["runs"], self.theme)
+
+    def _content_width(self, doc):
+        sec = doc.sections[0]
+        return sec.page_width - sec.left_margin - sec.right_margin
+
+
+def _shade_paragraph(paragraph, hex_no_hash):
+    ppr = paragraph._p.get_or_add_pPr()
+    shd = OxmlElement("w:shd")
+    shd.set(qn("w:val"), "clear")
+    shd.set(qn("w:fill"), hex_no_hash)
+    ppr.append(shd)
+
+
+def _r(text):
+    return {"text": text, "bold": False, "italic": False, "code": False}
+
+
+# ─── 진입점 ──────────────────────────────────────────────────────────────────
+def render_docx(parsed, out_path, theme, base_dir=None, logo_path=None, template_docx=None):
+    if template_docx:
+        return _render_template(parsed, out_path, theme, base_dir, template_docx)
+    return DocxRenderer(theme, base_dir).render(parsed, out_path, logo_path)
+
+
+def _render_template(parsed, out_path, theme, base_dir, template_docx):
+    """회사 양식 docx 위에 렌더 — 스타일·머리글/바닥글·여백 유지, 본문 교체.
+    # ponytail: 스타일 매핑은 layout_map.docx_styles(있으면), 없으면 우리 스타일 추가.
+    """
+    tpath = Path(template_docx)
+    if not tpath.is_absolute() and base_dir:
+        tpath = Path(base_dir) / template_docx
+    doc = Document(str(tpath))
+    fm = parsed["frontmatter"]
+    body = doc.element.body
+
+    # 자리표시자 치환(표지 등 유지), 값 채움
+    subs = {
+        k: str(fm.get(k, ""))
+        for k in ("title", "subtitle", "date", "author", "version", "org", "security")
+    }
+    has_placeholder = _substitute_placeholders(doc, subs)
+
+    # 본문 요소 제거(마지막 sectPr 유지). 표지에 자리표시자가 있었으면 표지도 유지됨.
+    removed = 0
+    if not has_placeholder:
+        for el in list(body):
+            if el.tag == qn("w:sectPr"):
+                continue
+            body.remove(el)
+            removed += 1
+
+    styles_avail = {s.name for s in doc.styles}
+    if "Table Grid" not in styles_avail or "Heading 1" not in styles_avail:
+        _define_styles(doc, theme)
+    renderer = DocxRenderer(theme, base_dir)
+    headings = []
+    for b in parsed["blocks"]:
+        renderer._block(doc, b, headings)
+    renderer._footnotes(doc, parsed.get("footnotes", []))
+    Path(out_path).parent.mkdir(parents=True, exist_ok=True)
+    doc.save(out_path)
+    warns = renderer.warnings + [f"템플릿 모드: 본문 요소 {removed}개 제거, 스타일·머리글 유지."]
+    return {
+        "out_path": str(Path(out_path).resolve()),
+        "pages_estimate": max(1, len(parsed["blocks"]) // 6 + 1),
+        "headings": headings,
+        "warnings": warns,
+    }
+
+
+def _substitute_placeholders(doc, subs) -> bool:
+    found = False
+    for p in doc.paragraphs:
+        text = "".join(r.text for r in p.runs)
+        if _TITLE_FIELD.search(text):
+            found = True
+            new = _TITLE_FIELD.sub(lambda m: subs.get(m.group(1), ""), text)
+            for r in p.runs:
+                r.text = ""
+            if p.runs:
+                p.runs[0].text = new
+    return found

@@ -1,135 +1,97 @@
-"""파서: frontmatter, 블록 타입, 인라인 run, 덱 슬라이드 분리·레이아웃 추론."""
+import pytest
 
 from docgen import parse
 
-DOC = """---
-title: 테스트 설계서
-doc_type: 설계서
-version: 0.1
-history:
-  - { version: 0.1, date: 2026-09-04, author: 민현성, note: 초안 }
----
-# 1. 개요
-첫 문단이다. **굵게** 와 `코드` 와 [링크](https://example.com).
-
-## 1.1 목적
-- 항목 하나
-- 항목 둘
-
-| 항목 | 대안 A | 검토 의견 |
-|---|---|---|
-| 비용 | 낮음 | 적합 |
-
-<!-- caption: 대안 비교표 -->
-
-| 지표 | 값 |
-|---|---|
-| a | 1 |
-
-```diagram
-type: architecture
-nodes:
-  - { id: api, label: 요약 API }
-```
-
-![구성도 설명](images/x.png)
-
-<!-- pagebreak -->
-
-> 참고 박스
-"""
+pytestmark = pytest.mark.deterministic
 
 
-def _types(blocks):
-    return [b["type"] for b in blocks]
+def _bt(blocks, t):
+    return [b for b in blocks if b["type"] == t]
 
 
-def test_frontmatter():
-    doc = parse.parse_doc(DOC, is_text=True)
-    fm = doc["frontmatter"]
-    assert fm["title"] == "테스트 설계서"
-    assert fm["doc_type"] == "설계서"
-    assert isinstance(fm["history"], list) and fm["history"][0]["author"] == "민현성"
+def test_frontmatter_and_headings(design_md):
+    r = parse.parse_doc(design_md)
+    assert r["frontmatter"]["doc_type"] == "설계서"
+    assert r["frontmatter"]["title"].startswith("사내 LLM")
+    hs = _bt(r["blocks"], "heading")
+    assert hs[0]["level"] == 1 and hs[0]["text"].startswith("1. 개요")
 
 
-def test_block_sequence():
-    blocks = parse.parse_doc(DOC, is_text=True)["blocks"]
-    t = _types(blocks)
-    assert t[0] == "heading" and blocks[0]["level"] == 1
-    assert "paragraph" in t and "list" in t and "table" in t
-    assert "diagram" in t and "image" in t and "pagebreak" in t and "blockquote" in t
+def test_inline_runs_bold_code():
+    r = parse.parse_doc("본문 **굵게** 와 `코드` 다.")
+    runs = _bt(r["blocks"], "paragraph")[0]["runs"]
+    assert any(x["bold"] for x in runs)
+    assert any(x["code"] for x in runs)
 
 
-def test_inline_runs():
-    blocks = parse.parse_doc(DOC, is_text=True)["blocks"]
-    para = next(b for b in blocks if b["type"] == "paragraph")
-    runs = para["runs"]
-    assert any(r.get("bold") for r in runs)
-    assert any(r["kind"] == "code" for r in runs)
-    assert any(r.get("link") for r in runs)
+def test_table_alignment_and_caption(design_md):
+    r = parse.parse_doc(design_md)
+    tables = _bt(r["blocks"], "table")
+    # 대안 비교 표: 숫자 열이 오른쪽 정렬
+    align_sets = [t["align"] for t in tables]
+    assert any("right" in a for a in align_sets)
+    assert any(t.get("caption") for t in tables)
 
 
-def test_table_and_caption():
-    blocks = parse.parse_doc(DOC, is_text=True)["blocks"]
-    tables = [b for b in blocks if b["type"] == "table"]
-    assert parse.runs_text(tables[0]["header"][-1]) == "검토 의견"
-    assert tables[0]["caption"] is None
-    assert tables[1]["caption"] == "대안 비교표"
+def test_nested_list():
+    r = parse.parse_doc("- a\n- b\n  - b1\n  - b2\n")
+    lst = _bt(r["blocks"], "list")[0]
+    assert lst["ordered"] is False
+    b = lst["items"][1]
+    assert len(b["children"]) == 2
+    assert b["children"][0]["level"] == 1
 
 
-def test_diagram_spec():
-    blocks = parse.parse_doc(DOC, is_text=True)["blocks"]
-    dia = next(b for b in blocks if b["type"] == "diagram")
-    assert dia["spec"]["type"] == "architecture"
-    assert dia["spec"]["nodes"][0]["id"] == "api"
+def test_diagram_timeline_chart_blocks(design_md):
+    r = parse.parse_doc(design_md)
+    d = _bt(r["blocks"], "diagram")
+    assert d and len(d[0]["spec"]["nodes"]) == 6
+    assert len(d[0]["spec"]["edges"]) == 5
 
 
-def test_image():
-    blocks = parse.parse_doc(DOC, is_text=True)["blocks"]
-    img = next(b for b in blocks if b["type"] == "image")
-    assert img["path"] == "images/x.png" and img["caption"] == "구성도 설명"
+def test_chart_and_timeline_specs(deck_md):
+    r = parse.parse_deck(deck_md)
+    charts = [b for s in r["slides"] for b in s["blocks"] if b["type"] == "chart"]
+    assert charts and charts[0]["spec"]["type"] == "bar"
+    tls = [b for s in r["slides"] for b in s["blocks"] if b["type"] == "timeline"]
+    assert tls and len(tls[0]["spec"]["tasks"]) == 3
 
 
-DECK = """---
-title: 덱 테스트
-footer: 데이타솔루션
----
-# 배경
-<!-- layout: message -->
-## 키가 흩어져 비용을 통제하지 못한다
-- 키 개별 발급
-- 로그 미보관
-<!-- note: 발표자 노트 -->
-
----
-# 목표 아키텍처
-## 게이트웨이 한 곳에서 처리한다
-```diagram
-type: architecture
-nodes:
-  - { id: gw, label: Gateway }
-```
-
----
-# 대안 비교
-## LiteLLM 이 기능이 가장 넓다
-| 항목 | LiteLLM | 검토 의견 |
-|---|---|---|
-| 폴백 | 있음 | 적합 |
-"""
+def test_footnotes():
+    r = parse.parse_doc("본문[^1]\n\n[^1]: 각주다\n")
+    assert r["footnotes"] and r["footnotes"][0]["id"] == "1"
 
 
-def test_deck_slides():
-    deck = parse.parse_deck(DECK, is_text=True)
-    slides = deck["slides"]
-    assert len(slides) == 3
-    assert slides[0]["title"] == "배경"
-    assert slides[0]["headline"].startswith("키가 흩어져")
-    assert slides[0]["layout"] == "message"
-    assert slides[0]["note"] == "발표자 노트"
+def test_bad_diagram_yaml_raises():
+    with pytest.raises(ValueError):
+        parse.parse_doc("```diagram\n: : : not yaml\n  - [\n```\n")
 
 
-def test_deck_layout_inference():
-    slides = parse.parse_deck(DECK, is_text=True)["slides"]
-    assert slides[1]["layout"] == "diagram"  # diagram 블록으로 추론
-    assert slides[2]["layout"] == "table"  # 표로 추론
+def test_deck_split_and_layout_inference(deck_md):
+    r = parse.parse_deck(deck_md)
+    titles = [(s["title"], s["layout"]) for s in r["slides"]]
+    layouts = dict(titles)
+    assert layouts["목표 아키텍처"] == "diagram"
+    assert layouts["비용 비교"] == "chart"
+    assert layouts["대안 비교"] == "table"
+    assert layouts["추진 일정"] == "timeline"
+    assert layouts["요청 사항"] == "closing"  # 명시 layout
+
+
+def test_deck_headline_and_notes(deck_md):
+    r = parse.parse_deck(deck_md)
+    first = r["slides"][0]
+    assert first["headline"].startswith("모델별 API 키가")
+    assert "소유자 불명" in first["notes"]
+
+
+def test_two_col():
+    deck = (
+        "---\ntitle: t\n---\n# s\n## h\n"
+        "<!-- col -->\n### 왼쪽\n- a\n"
+        "<!-- col -->\n### 오른쪽\n- b\n"
+    )
+    r = parse.parse_deck(deck)
+    s = r["slides"][0]
+    assert s["layout"] == "two-col"
+    assert s["columns"] and len(s["columns"]) == 2
