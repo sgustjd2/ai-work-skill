@@ -5,7 +5,7 @@ FastAPI 서비스 골격, GitLab CI/CD, 코드 리뷰·테스트·리팩토링, 
 문서는 데이타솔루션 팔레트와 한국 기업 문서체로 나오고, AI 문체는 훅이 파일에 닿기 전에 차단한다.
 
 - 설계 문서: [docs/PRD.md](docs/PRD.md)
-- 상태: **PRD 0.2 완성, 구현 전** (2026-09-04). 0.1의 누락 점검을 반영해 MCP 경로 해석, 한국 문서 기호 예외, 렌더러 우회 차단, GenAI 패턴(RAG·프롬프트 관리), 차트·템플릿 모드, 추적표(부록 E), 합류 첫 주 확인 목록(부록 F)을 추가했다. 구현은 Claude Opus 4.8이 PRD와 [CLAUDE.md](CLAUDE.md)만 보고 진행한다. 진행 순서는 PRD §13 마일스톤(M0 → M4).
+- 상태: **M0 완료** (2026-09-04). 골격 계층(STYLE.md·테마·doc_lint 훅·install.py·ai-init·doc-write)이 동작한다. 하드 룰 H1~H10 과 소프트 룰 S1~S18, 3개 CLI 모드가 모두 있고, 저장소 자기 검사에서 하드 위반 0 이다. 검증: `uv run pytest` 72 PASS, `ruff check`·`format --check` clean, `doc_lint --all docs skills README.md` 하드 0. 골든 프롬프트 검사는 M1(docgen) 이후. 미해결 결정 없음(§14 추천값 적용). 다음은 M1 문서 생성(docgen). 구현은 Claude Opus 4.8이 PRD와 [CLAUDE.md](CLAUDE.md)만 보고 진행한다.
 - 외부 사실 출처: [docs/research/sources-2026-09-04.md](docs/research/sources-2026-09-04.md)
 - 선행 자산: `../ui-skill-set`(구조·훅·설치기 원형), `../품의서/.claude/skills/review-report-writer`(문체 규칙 원형)
 

@@ -8,6 +8,7 @@ doc_lint: off
 |---|---|
 | 버전 | 0.2 (초안, 구현 전). 0.1의 누락 점검 결과 반영: MCP 경로 해석(§9), H6 한국 문서 기호 예외·H9 자리표시자 예외·H10 렌더러 우회 차단(§7.1), S18 용어 통일(§7.2), GenAI 패턴·RAG·프롬프트 관리(§8.4, §8.12), 팀 예산 툴(§9.1), 차트 DSL·docx 템플릿 모드·결과물 위치(§10), 구현자용 `CLAUDE.md`(§11.9), 금지 표현 사전 전문(부록 B), 추적표(부록 E), 합류 첫 주 확인 목록(부록 F) |
 | 작성일 | 2026-09-04 |
+| 진행 | **M0 완료**(2026-09-04): FR-1~8·37·38. STYLE.md·테마·doc_lint(H1~H10·S1~S18)·install·ai-init·doc-write. 72 테스트 PASS, ruff clean, 자기 검사 하드 0, 실제 프로젝트 설치·차단 확인. 다음은 M1(docgen) |
 | 작성 | Claude Fable 5.1 (PRD 전담) |
 | 구현 | Claude Opus 4.8. **이 문서만 보고** 코드를 만든다. 결정이 필요한 곳은 §14의 추천값으로 진행한다 |
 | 저장소 | `E:\workspace\ai-work-skill` (플러그인 이름 `ai-work-skill`, 배포 시 `sgustjd2/ai-work-skill`) |
@@ -1304,7 +1305,7 @@ python templates/install.py --target <dir> [--org "데이타솔루션 기술연�
 
 | | 산출물 | 완료 조건 |
 |---|---|---|
-| **M0 골격** | FR-1~8: STYLE.md, 테마, `doc_lint --pre`, 테스트, install.py, ai-init, doc-write(md까지), 스니펫 | 실제 프로젝트 1개에 설치, 문서 편집 20회에서 H1·H6 도달 0. `uv run pytest` 전부 통과 |
+| **M0 골격 (완료)** | FR-1~8: STYLE.md, 테마, `doc_lint --pre`, 테스트, install.py, ai-init, doc-write(md까지), 스니펫 | 완료 2026-09-04. 실제 프로젝트 설치·차단 확인, 자기 검사 하드 0, `uv run pytest` 72 PASS. 소프트 룰(S1~S18)과 `--stop`/`--all`도 함께 구현(FR-18 선행), py_format(FR-25) 선행 |
 | **M1 문서 생성** | FR-9~19: docgen 파서·docx·pptx·diagram·MCP·CLI, deck-write, `--stop`, arch-doc-types | 골든 01·02 PASS. Word·PowerPoint에서 복구 없이 열림. 회사 템플릿 픽스처로 템플릿 모드 1회 |
 | **M2 개발** | FR-20~26: fastapi-service, gitlab-ci, py-test, py-review, py-refactor, py_format, python-conventions | 골든 03·04·08 PASS. 생성 골격이 Linux·Windows 양쪽에서 pytest 통과 |
 | **M3 LLM 운영** | FR-27~30: llm-gateway, litellm-ops, model-serving, ai-trend-brief | 골든 05·06 PASS. 실제 LiteLLM(docker compose)에 대해 `gateway_health`·`test_completion` 1회 성공 |

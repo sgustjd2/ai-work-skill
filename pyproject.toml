@@ -1,0 +1,25 @@
+[project]
+name = "ai-work-skill-dev"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = []
+
+[dependency-groups]
+dev = ["pytest>=8,<9", "pytest-cov>=5", "ruff>=0.6", "jsonschema>=4.20,<5", "PyYAML>=6,<7"]
+
+# M0: tests/ 만. mcp/docgen·mcp/litellm_ops 는 M1·M3 에서 workspace member 로 추가한다.
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers --strict-config"
+markers = [
+    "deterministic: 어디서나 실행",
+    "host_cli: claude CLI 필요",
+    "manual: 사람·모델 필요, 자동 실행 안 함",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"          # templates/·skills/ 는 3.9 문법
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "ASYNC"]

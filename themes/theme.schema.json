@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/sgustjd2/ai-work-skill/themes/theme.schema.json",
+  "title": "ai-work-skill 테마",
+  "description": "문서·덱 렌더러가 읽는 유일한 색·폰트·치수 원본. 렌더러 소스에는 hex 리터럴이 없다.",
+  "type": "object",
+  "required": ["name", "colors", "fonts", "docx", "pptx"],
+  "additionalProperties": true,
+  "properties": {
+    "name": { "type": "string", "minLength": 1 },
+    "source": { "type": "string" },
+    "colors": {
+      "type": "object",
+      "required": [
+        "primary", "primary_dark", "accent", "action",
+        "ink", "ink_muted", "ink_subtle",
+        "line", "surface", "white",
+        "positive", "warning", "critical"
+      ],
+      "additionalProperties": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+      "patternProperties": {
+        "^.*$": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" }
+      }
+    },
+    "fonts": {
+      "type": "object",
+      "required": ["office_ko", "office_latin", "web_ko", "mono"],
+      "properties": {
+        "office_ko": { "type": "string", "minLength": 1 },
+        "office_latin": { "type": "string", "minLength": 1 },
+        "web_ko": { "type": "string", "minLength": 1 },
+        "mono": { "type": "string", "minLength": 1 },
+        "font_paths": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "docx": {
+      "type": "object",
+      "required": ["page", "margins_mm", "body_pt", "h1_pt", "h2_pt", "h3_pt"],
+      "properties": {
+        "page": { "type": "string" },
+        "margins_mm": {
+          "type": "array", "items": { "type": "number" }, "minItems": 4, "maxItems": 4
+        },
+        "body_pt": { "type": "number", "exclusiveMinimum": 0 },
+        "line_spacing": { "type": "number", "exclusiveMinimum": 0 },
+        "para_after_pt": { "type": "number", "minimum": 0 },
+        "h1_pt": { "type": "number", "exclusiveMinimum": 0 },
+        "h2_pt": { "type": "number", "exclusiveMinimum": 0 },
+        "h3_pt": { "type": "number", "exclusiveMinimum": 0 },
+        "heading_color": { "type": "string" },
+        "rule_color": { "type": "string" },
+        "table_header_fill": { "type": "string" },
+        "table_header_text": { "type": "string" }
+      }
+    },
+    "pptx": {
+      "type": "object",
+      "required": ["size", "width_in", "height_in", "headline_pt", "body_pt"],
+      "properties": {
+        "size": { "type": "string" },
+        "width_in": { "type": "number", "exclusiveMinimum": 0 },
+        "height_in": { "type": "number", "exclusiveMinimum": 0 },
+        "margin_in": { "type": "number", "minimum": 0 },
+        "title_pt": { "type": "number", "exclusiveMinimum": 0 },
+        "headline_pt": { "type": "number", "exclusiveMinimum": 0 },
+        "body_pt": { "type": "number", "exclusiveMinimum": 0 },
+        "caption_pt": { "type": "number", "exclusiveMinimum": 0 },
+        "footer_pt": { "type": "number", "exclusiveMinimum": 0 },
+        "headline_color": { "type": "string" },
+        "title_color": { "type": "string" },
+        "accent_bar": { "type": "boolean" },
+        "layout_map": { "type": "object" }
+      }
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          { "type": "command", "command": "python -X utf8 .claude/hooks/doc_lint.py --pre", "timeout": 5 }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          { "type": "command", "command": "python -X utf8 .claude/hooks/py_format.py --post", "timeout": 40 }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          { "type": "command", "command": "python -X utf8 .claude/hooks/doc_lint.py --stop", "timeout": 20 }
+        ]
+      }
+    ]
+  }
+}

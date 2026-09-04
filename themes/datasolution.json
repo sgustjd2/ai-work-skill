@@ -1,0 +1,26 @@
+{
+  "name": "datasolution",
+  "source": "datasolution.kr CSS 변수(2026-09-04 측정) + CI 안내(C100 / C100 M85 K10). 공식 템플릿 확보 시 theme_from_pptx로 교체",
+  "colors": {
+    "primary": "#133F91", "primary_dark": "#002B96", "accent": "#00AEEF", "action": "#1366E3",
+    "ink": "#222222", "ink_muted": "#666666", "ink_subtle": "#999999",
+    "line": "#CDCDCD", "line_soft": "#E5E5E5", "surface": "#F7F7F7", "surface_alt": "#F6F7FB", "white": "#FFFFFF",
+    "positive": "#0F8A5F", "warning": "#B26A00", "critical": "#C0392B", "highlight": "#FFF2AB"
+  },
+  "fonts": {
+    "office_ko": "맑은 고딕", "office_latin": "맑은 고딕", "web_ko": "Pretendard", "mono": "Consolas",
+    "font_paths": ["C:/Windows/Fonts/malgun.ttf", "/usr/share/fonts/truetype/nanum/NanumGothic.ttf"]
+  },
+  "docx": {
+    "page": "A4", "margins_mm": [25, 20, 25, 20],
+    "body_pt": 10.5, "line_spacing": 1.6, "para_after_pt": 6,
+    "h1_pt": 16, "h2_pt": 13, "h3_pt": 11.5, "caption_pt": 9, "code_pt": 9, "table_pt": 9.5,
+    "heading_color": "primary", "rule_color": "primary", "table_header_fill": "surface", "table_header_text": "primary"
+  },
+  "pptx": {
+    "size": "16:9", "width_in": 13.333, "height_in": 7.5, "margin_in": 0.5,
+    "title_pt": 14, "headline_pt": 22, "body_pt": 14, "caption_pt": 10, "footer_pt": 9,
+    "headline_color": "primary", "title_color": "ink_muted", "accent_bar": true,
+    "layout_map": {}
+  }
+}
