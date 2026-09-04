@@ -1,0 +1,26 @@
+{
+  "mcpServers": {
+    "docgen": {
+      "type": "stdio",
+      "command": "uv",
+      "args": ["run", "--project", "${CLAUDE_PLUGIN_ROOT}/mcp/docgen", "python", "-m", "docgen.server"],
+      "env": { "AI_WORK_SKILL_ROOT": "${CLAUDE_PLUGIN_ROOT}", "DOCGEN_PROJECT_DIR": "${CLAUDE_PROJECT_DIR}" }
+    },
+    "litellm-ops": {
+      "type": "stdio",
+      "command": "uv",
+      "args": ["run", "--project", "${CLAUDE_PLUGIN_ROOT}/mcp/litellm_ops", "python", "-m", "litellm_ops.server"],
+      "env": {
+        "LITELLM_BASE_URL": "${LITELLM_BASE_URL:-http://localhost:4000}",
+        "LITELLM_MASTER_KEY": "${LITELLM_MASTER_KEY}",
+        "LITELLM_API_KEY": "${LITELLM_API_KEY:-}",
+        "LITELLM_OPS_ALLOW_WRITE": "${LITELLM_OPS_ALLOW_WRITE:-false}",
+        "LITELLM_CONFIG_PATH": "${LITELLM_CONFIG_PATH:-}"
+      }
+    },
+    "gitlab": {
+      "type": "http",
+      "url": "${GITLAB_URL}/api/v4/mcp"
+    }
+  }
+}

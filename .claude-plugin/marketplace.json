@@ -1,0 +1,18 @@
+{
+  "name": "ai-work-skill",
+  "owner": { "name": "sgustjd2" },
+  "plugins": [
+    {
+      "name": "ai-work-skill",
+      "source": "./",
+      "description": "생성형 AI 서비스 개발 조직용 스킬 세트. 문서·덱·서비스 골격·CI·게이트웨이 운영을 회사 표준대로 만들고, AI 문체를 편집 전에 차단한다.",
+      "version": "0.1.0",
+      "author": { "name": "sgustjd2" },
+      "license": "MIT",
+      "homepage": "https://github.com/sgustjd2/ai-work-skill",
+      "repository": "https://github.com/sgustjd2/ai-work-skill",
+      "keywords": ["fastapi", "gitlab", "litellm", "docx", "pptx", "korean", "anti-slop"],
+      "category": "development"
+    }
+  ]
+}

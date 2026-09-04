@@ -19,7 +19,7 @@
 | 클라우드(Azure/AWS/GCP) | azure·bedrock·vertex 참조, deploy-targets | FR-21, 27 | config_validate 픽스처 | 05 | M2, M3 | **M3 완료**: 제공자 3종 연결 참조, config.example 검증 통과 |
 | LiteLLM·LLM Gateway 구축 | llm-gateway, litellm-ops MCP | FR-27, 28 | litellm_ops(21: ops+validate) | 05 | M3 | **완료**: MCP 12툴+CLI, config_validate V1~V8, 쓰기 게이트 |
 | 문서·덱이 회사 것처럼 | STYLE.md, 테마, doc_lint, 부록 B | FR-1~5, 10, 11, 18 | test_doc_lint, test_theme, test_install | 01, 02, 07 | M0, M1 | M0 완료: doc_lint(H1~H10·S1~S18)·테마·install·STYLE.md, 72 테스트 PASS |
-| ui-skill-set 연동 | theme_export, install --with-ui | FR-33 | test_theme | manual | M4 | |
+| ui-skill-set 연동 | theme_export, install --with-ui(accent_ramp) | FR-33 | test_m4_eval(accent_ramp) | manual | M4 | **완료**: 테마 램프 생성·tokens.css 주입 |
 
 ## M1 완료 (docgen, 2026-09-04)
 
@@ -79,3 +79,13 @@ FR-27~30 전부 구현. litellm_ops 21 + M3 스크립트 5 테스트 추가(누�
 - 쓰기 게이트: LITELLM_OPS_ALLOW_WRITE=true 일 때만 키 발급·차단·팀 생성. 시크릿은 마스킹.
 - config.example.yaml 은 config_validate 를 통과한다(azure 2리전·bedrock·vertex·vllm·임베딩, 폴백 무결, os.environ 참조).
 - 다음: M4(배포·플러그인 매니페스트·.mcp.json·eval·ui 연동).
+
+## M4 완료 (배포, 2026-09-04)
+
+FR-31~34 전부 구현. 누적 171 테스트 PASS(+manual 1), ruff clean, doc_lint 자기검사 하드 0(97문서). 프로젝트 M0~M4 전체 완료.
+
+- FR-31 매니페스트: `.claude-plugin/plugin.json`(skills·mcpServers 배선)·`marketplace.json`, `.mcp.json`(docgen·litellm-ops stdio + gitlab http, ${CLAUDE_PLUGIN_ROOT}), `skills/llms.txt`(11줄), `LICENSE`(MIT)·`NOTICE`(ui-skill-set·review-report-writer 출처, 팔레트 출처).
+- FR-32 eval: `eval/check_output.py`(산문 doc_lint 하드 0·덱 소프트 0 + 생성 docx/pptx 콘텐츠 색이 테마 팔레트·파생 틴트 안인지), 골든 프롬프트 8개, `results.md` 기준선, `eval/README.md`. 렌더 픽스처로 PASS 재현(test_m4_eval).
+- FR-33 ui 연동: `install.py accent_ramp`(테마 action→--ui-accent-100..900, hex 리터럴 없음) + `inject_accent_ramp`(tokens.css 교체). `--with-ui` 가 install.mjs 실행 후 램프 주입.
+- FR-34 CI: `.github/workflows/ci.yml`(ubuntu+windows 매트릭스, uv sync·ruff check·format·pytest·doc_lint --all). 렌더러 hex 리터럴 0 검사는 pytest(test_theme)로.
+- 배포 경로: `claude plugin marketplace add sgustjd2/ai-work-skill` → `/plugin install`. MCP 는 `uv` 필요.

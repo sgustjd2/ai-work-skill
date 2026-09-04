@@ -25,6 +25,59 @@ from pathlib import Path
 
 CLAUDE_MARKER = "## 문서·코드 규약 (ai-work-skill)"
 
+# FR-33: ui-skill-set 용 --ui-accent-100..900 램프. action 색을 기준으로 명도 보간.
+_RAMP_STEPS = {
+    100: 0.92,
+    200: 0.82,
+    300: 0.68,
+    400: 0.5,
+    500: 0.28,
+    600: 0.12,
+    700: 0.0,
+    800: 0.18,
+    900: 0.42,
+}
+
+
+def _mix(hex_a: str, hex_b: str, t: float) -> str:
+    def rgb(h):
+        h = h.lstrip("#")
+        return int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+
+    ra, ga, ba = rgb(hex_a)
+    rb, gb, bb = rgb(hex_b)
+    r, g, b = (round(a + (c - a) * t) for a, c in ((ra, rb), (ga, gb), (ba, bb)))
+    return f"#{r:02X}{g:02X}{b:02X}"
+
+
+def accent_ramp(theme: dict) -> str:
+    """테마 dict → --ui-accent-100..900 CSS. 700 이하는 흰색, 800~900 은 ink 방향.
+    색은 테마에서만 온다(소스에 hex 리터럴 없음)."""
+    colors = theme.get("colors", {})
+    base = colors.get("action") or colors.get("primary")
+    white = colors.get("white")
+    ink = colors.get("ink")
+    if not (base and white and ink):
+        raise ValueError("테마에 action(또는 primary)·white·ink 색이 필요합니다.")
+    lines = ["/* ai-work-skill 테마에서 생성된 액센트 램프 (FR-33) */", ":root {"]
+    for step, t in _RAMP_STEPS.items():
+        hexv = _mix(base, white, t) if step <= 700 else _mix(base, ink, t)
+        lines.append(f"  --ui-accent-{step}: {hexv};")
+    lines.append("}")
+    return "\n".join(lines) + "\n"
+
+
+def inject_accent_ramp(tokens_css: str, ramp_css: str) -> str:
+    """tokens.css 의 --ui-accent-* 선언을 교체(없으면 램프를 앞에 붙인다)."""
+    if "--ui-accent-100" not in tokens_css:
+        return ramp_css + "\n" + tokens_css
+    ramp_vals = dict(re.findall(r"(--ui-accent-\d+):\s*(#[0-9A-Fa-f]{6})", ramp_css))
+    out = tokens_css
+    for name, val in ramp_vals.items():
+        out = re.sub(rf"{name}:\s*#[0-9A-Fa-f]{{6}}", f"{name}: {val}", out)
+    return out
+
+
 # (event, matcher, script, mode, timeout, python_only)
 HOOKS = [
     ("PreToolUse", "Edit|Write|MultiEdit", "doc_lint.py", "--pre", 5, False),
@@ -331,18 +384,59 @@ def main(argv=None):
             shutil.copyfile(src, _ensure(target / "docs" / "assets" / "logo.png"))
             log("✓ docs/assets/logo.png (로고는 저장소가 아니라 프로젝트에만 둡니다)")
 
-    # 10. --with-ui (전체 연동은 M4/FR-33)
+    # 10. --with-ui (FR-33): ui-skill-set 설치 + 테마 액센트 램프 주입
     if a.get("with-ui"):
-        ui = (
+        ui = Path(
             a.get("ui-skill-set")
             or os.environ.get("UI_SKILL_SET_ROOT")
             or str(target.parent / "ui-skill-set")
         )
-        if Path(ui).exists():
-            log(f"· UI 연동: {ui}/templates/install.mjs 를 실행하세요 (hue blue).")
-            log("  램프 주입 자동화는 M4/FR-33 에서.")
-        else:
+        if not ui.exists():
             log("· ui-skill-set 미발견(--ui-skill-set 또는 UI_SKILL_SET_ROOT). 건너뜁니다.")
+        else:
+            node = shutil.which("node")
+            stack = "react-tailwind4" if (target / "package.json").exists() else "react-css"
+            if node:
+                try:
+                    subprocess.run(
+                        [
+                            node,
+                            str(ui / "templates" / "install.mjs"),
+                            "--target",
+                            str(target),
+                            "--mode",
+                            "operate",
+                            "--stack",
+                            stack,
+                            "--hue",
+                            "blue",
+                        ],
+                        check=True,
+                        capture_output=True,
+                        timeout=60,
+                    )
+                    log(f"✓ ui-skill-set 설치(install.mjs, stack {stack})")
+                except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
+                    log(f"· install.mjs 실행 실패({e}). 수동으로 실행하세요.")
+            else:
+                log("· node 미발견. ui-skill-set/templates/install.mjs 를 수동 실행하세요.")
+            # 테마 램프를 tokens.css 에 주입
+            theme_file = here.parent / "themes" / f"{a.get('theme', 'datasolution')}.json"
+            tokens = target / "src" / "styles" / "tokens.css"
+            if theme_file.exists() and tokens.exists():
+                theme = json.loads(theme_file.read_text(encoding="utf-8"))
+                tokens.write_text(
+                    inject_accent_ramp(tokens.read_text(encoding="utf-8"), accent_ramp(theme)),
+                    encoding="utf-8",
+                )
+                log("✓ tokens.css 에 테마 액센트 램프 주입(문서·덱·UI 가 같은 파랑)")
+            elif theme_file.exists():
+                (target / "docs").mkdir(exist_ok=True)
+                (target / "docs" / "ui-accent-ramp.css").write_text(
+                    accent_ramp(json.loads(theme_file.read_text(encoding="utf-8"))),
+                    encoding="utf-8",
+                )
+                log("· tokens.css 없음. docs/ui-accent-ramp.css 로 램프를 저장했습니다.")
 
     # 11. 다음 단계
     log("")

@@ -1,0 +1,11 @@
+ai-init: ai-work-skill 을 현재 프로젝트에 설치(STYLE.md·doc_lint 훅·CLAUDE 규약·docs 골격·GitLab MCP). 트리거: 프로젝트 세팅, 문서 규약 설치, 스타일 가이드, 온보딩, --update, --with-ui.
+doc-write: 설계서·검토보고서·가이드·런북·ADR·인터페이스 정의서·회의록·브리프·README·교육 문서를 한국 기업 문서체로 쓰고 docx 로 렌더링. 트리거: 설계서, 문서 작성, 가이드, 보고서, AS-IS/TO-BE, docx.
+deck-write: 경영진 보고·기술 공유·제안·교육 슬라이드를 헤드 메시지·개조식·회사 테마로 만들고 pptx 로 렌더링. 트리거: 덱, PPT, pptx, 발표자료, 장표, 10장 요약.
+fastapi-service: FastAPI 생성형 AI 서비스 골격 생성·표준화(게이트웨이 경유, 테스트·Docker·CI). 트리거: 서비스 골격, API 서버, 요약/챗/RAG API, 개발 환경 구축, SSE.
+gitlab-ci: GitLab CI/CD 파이프라인 생성·진단·운영. 트리거: .gitlab-ci.yml, 파이프라인, 빌드/배포 자동화, MR 파이프라인, 파이프라인 실패 원인.
+py-review: Python·FastAPI·LLM 코드 리뷰(심각도·파일:줄·수정안, 승인 후 게시). 트리거: 리뷰, MR 리뷰, 코드 봐줘, 머지 전 확인, 보안 검토.
+py-test: pytest 테스트 작성·정리(respx 모킹, live_llm 격리). 트리거: 테스트 작성, 단위 테스트, 커버리지, LLM 호출 모킹, 스트리밍 테스트.
+py-refactor: 모듈화·구조 개선·리팩토링을 계획하고 안전하게 수행(동작 변화 없음, ADR). 트리거: 리팩토링, 구조 개선, 순환 import, 레이어 정리, 중복 제거.
+llm-gateway: LiteLLM 게이트웨이 설계·구축·운영(config 검증 후 배포, 상태·비용·키). 트리거: LiteLLM, LLM 게이트웨이, config.yaml, 폴백, 가상 키, 비용 추적.
+model-serving: 오픈소스 LLM·VLM 을 vLLM 으로 서빙·최적화(VRAM 산정, 양자화, 벤치). 트리거: vLLM, 모델 서빙, 양자화, VRAM, GPU 몇 장, 처리량 벤치마크.
+ai-trend-brief: 생성형 AI 트렌드를 조사해 우리 서비스 영향·적용까지 담은 브리프 작성. 트리거: AI 트렌드, 이번 주 동향, 새 모델, 릴리스 노트, 월간 기술 동향.

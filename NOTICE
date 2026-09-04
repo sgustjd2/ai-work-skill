@@ -1,0 +1,22 @@
+ai-work-skill
+Copyright (c) 2026 민현성 (sgustjd2)
+
+이 저장소는 아래 자산의 구조·규칙을 참고해 다시 구현했다. 코드를 그대로 복사하지 않고,
+계약·규칙·정규식의 구조를 이 프로젝트의 언어(Python)와 목적(문서·코드·게이트웨이)에 맞게 옮겼다.
+
+- ui-skill-set (github.com/sgustjd2/ui-skill-set, MIT, 같은 작성자)
+  훅 I/O 계약(PreToolUse exit 2 차단, Stop 1회 지적, 안티 데드락), 설치기 병합 로직
+  (settings.json 병합·frontmatter 채우기·CLAUDE 멱등 추가), 예외 마커 문법("이유 필수"),
+  안티 슬롭 규칙의 접근(이진 규칙·편집 전 차단)을 참고했다. Node 훅을 Python 표준 라이브러리로
+  다시 썼다.
+
+- review-report-writer (사용자 소유, E:\workspace\품의서)
+  한국 기업 문서체 규칙(사실·추론·권고 구분, AI식 표현 목록, 비교표 규칙, 결론 7항목)을
+  references/writing-rules-ko.md 로 흡수했다.
+
+데이타솔루션 브랜드 팔레트(themes/datasolution.json)는 datasolution.kr 의 공개 CSS 변수와
+CI 안내 페이지에서 실측한 값이다(2026-09-04, docs/research/sources-2026-09-04.md 참조).
+회사 로고·상표는 이 저장소에 포함하지 않는다.
+
+외부 도구(LiteLLM, FastAPI, vLLM, GitLab)는 각자의 라이선스를 따르며, 이 저장소는 그것들을
+설정·호출·연동만 한다.

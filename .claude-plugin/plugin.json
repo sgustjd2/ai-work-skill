@@ -1,0 +1,16 @@
+{
+  "name": "ai-work-skill",
+  "displayName": "AI Work Skill",
+  "version": "0.1.0",
+  "description": "생성형 AI 서비스 개발 조직용 스킬 세트 — FastAPI 서비스·GitLab CI/CD·코드 리뷰/테스트/리팩토링·LiteLLM 게이트웨이 운영·아키텍처 문서(docx)/덱(pptx) 생성·AI 트렌드 브리프. 데이타솔루션 팔레트와 한국 기업 문서체로 나오고, AI 문체는 훅이 편집 전에 차단한다.",
+  "author": { "name": "sgustjd2" },
+  "homepage": "https://github.com/sgustjd2/ai-work-skill",
+  "repository": "https://github.com/sgustjd2/ai-work-skill",
+  "license": "MIT",
+  "keywords": [
+    "fastapi", "gitlab", "ci-cd", "litellm", "llm-gateway",
+    "docx", "pptx", "korean", "anti-slop", "design-tokens", "mcp"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json"
+}
