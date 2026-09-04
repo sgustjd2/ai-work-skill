@@ -17,16 +17,27 @@
 
 재현 중 `doc_lint` S16(존댓말 혼용)이 경어 `~합니다` 를 평서문으로 오탐하던 버그를 고쳤다(경어 문서 전부에 영향). 정규식을 `~니다.` 전체로 넓히고 이중 차감을 없앴다.
 
-## MCP 이식성 검증 (2026-09-04)
+## MCP 이식성 검증
 
-Claude 가 아닌 범용 MCP stdio 클라이언트로 두 서버에 붙여 확인했다. Codex·Gemini·Grok 이 MCP 서버에 붙는 방식이 이 방식이다.
+### 범용 클라이언트 (2026-09-04)
+
+Claude 가 아닌 범용 MCP stdio 클라이언트로 두 서버에 붙여 확인했다. 저장소가 아닌 임시 디렉터리에서 절대경로·env 만으로 띄워도 같다.
 
 | 서버 | initialize | 프로토콜 | tools/list | tools/call |
 |---|---|---|---|---|
 | docgen | OK | 2025-06-18 | 11툴 | theme_export 정상 |
 | litellm-ops | OK | 2025-06-18 | 12툴 | config_validate ok:true |
 
-Codex CLI 는 이 PC 에 없어 `codex plugin marketplace add` 는 실행하지 못했다. 매니페스트(`.codex-plugin/plugin.json`)는 JSON 유효를 확인했다.
+### 실제 호스트 (2026-09-05)
+
+Codex CLI 와 Gemini CLI 를 npm 전역 설치하고 두 서버를 등록했다.
+
+| 호스트 | 버전 | 등록 | 실제 툴 호출 |
+|---|---|---|---|
+| Codex CLI | 0.153.3 | `codex mcp add` 2개 enabled | gpt-5.6-luna 가 theme_export·config_validate 호출 성공(`codex exec --approve-for-me`) |
+| Gemini CLI | 0.58.0 | `gemini mcp add -s user` 2개 | 미실행. 폴더 신뢰·Google 로그인 필요(사용자 몫) |
+
+Codex 는 MCP 툴 호출에 승인이 필요하다. 헤드리스에선 `--approve-for-me` 로 통과시켰다. 등록·실행 명령은 `docs/hosts.md` 를 본다.
 
 ## check_output 기준선
 
