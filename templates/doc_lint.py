@@ -242,8 +242,8 @@ RE_DATE1 = re.compile(r"\d{4}\.\s?\d{1,2}\.\s?\d{1,2}\.?")
 RE_DATE2 = re.compile(r"\d{4}-\d{2}-\d{2}")
 RE_PCT = re.compile(r"\d+(?:\.\d+)?\s?%")
 RE_SOURCE_HINT = re.compile(r"http|출처|source|\[\d+\]", re.I)
-RE_FORMAL_END = re.compile(r"(?:습니다|입니다)\.")
-RE_PLAIN_END = re.compile(r"[가-힣]다\.")
+RE_FORMAL_END = re.compile(r"[가-힣]니다\.")  # 습니다·합니다·입니다·됩니다 등 경어체
+RE_PLAIN_END = re.compile(r"(?<=[가-힣])(?<!니)다\.")  # 평서문 '~다.' (경어 '~니다.' 제외)
 RE_LIST_ITEM = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+\S")
 RE_HEADING = re.compile(r"^#{1,6}\s")
 
@@ -548,10 +548,9 @@ def _soft_prose(clean, text, path, cfg, fm, markers):
         if "|" in line or RE_LIST_ITEM.match(line) or RE_HEADING.match(line):
             continue
         formal += len(RE_FORMAL_END.findall(line))
-        plain += len(RE_PLAIN_END.findall(line))
-    plain_only = plain - formal
-    if formal >= 3 and plain_only >= 3:
-        add("S16", "honorific-mix", 1, f"존댓말 {formal}·평서문 {plain_only} 공존")
+        plain += len(RE_PLAIN_END.findall(line))  # RE_PLAIN 은 경어 '~니다.' 를 이미 제외
+    if formal >= 3 and plain >= 3:
+        add("S16", "honorific-mix", 1, f"존댓말 {formal}·평서문 {plain} 공존")
 
     # S17 date-mix
     joined = "\n".join(clean)
