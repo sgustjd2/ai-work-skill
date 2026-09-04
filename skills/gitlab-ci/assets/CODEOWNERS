@@ -1,0 +1,6 @@
+# 코드 소유자. 해당 경로 변경 시 리뷰를 요청한다. 팀 핸들로 교체한다.
+# 예:
+# *                 @team-lead
+# /src/services/     @backend
+# /.gitlab-ci.yml    @platform
+# /docs/             @tech-writers

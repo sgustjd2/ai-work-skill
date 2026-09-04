@@ -5,7 +5,7 @@ FastAPI 서비스 골격, GitLab CI/CD, 코드 리뷰·테스트·리팩토링, 
 문서는 데이타솔루션 팔레트와 한국 기업 문서체로 나오고, AI 문체는 훅이 파일에 닿기 전에 차단한다.
 
 - 설계 문서: [docs/PRD.md](docs/PRD.md)
-- 상태: **M0·M1 완료** (2026-09-04). M0 골격 계층(STYLE.md·테마·doc_lint 훅·install.py·ai-init·doc-write)에 더해, M1 문서 생성 엔진 `docgen` 이 동작한다. `.doc.md` → docx(표지·목차·구성도·표·캡션), `.deck.md` → pptx(레이아웃 10종·헤드 메시지·네이티브 차트·구성도 도형), 구성도 3백엔드(mermaid·svg·png), MCP 서버 11툴 + 동일 CLI, 미리보기·양식 추출·`diagram_from_compose`, 회사 docx/pptx 템플릿 모드. 검증: `uv run pytest` 125 PASS(M0 72 + docgen 53), `ruff check`·`format --check` clean, `doc_lint --all docs skills README.md mcp/docgen/fixtures` 하드 0, 설계서 docx·게이트웨이 덱 pptx 실제 렌더(복구 없이 열림). 미해결 결정 없음(§14 추천값 적용). 다음은 M2 개발 스킬(fastapi-service·gitlab-ci·py-test·py-review·py-refactor). 구현은 Claude Opus 4.8이 PRD와 [CLAUDE.md](CLAUDE.md)만 보고 진행한다.
+- 상태: **M0·M1·M2 완료** (2026-09-04). M0 골격(STYLE.md·테마·doc_lint 훅·install·ai-init·doc-write), M1 문서 생성 엔진 `docgen`(.doc.md→docx, .deck.md→pptx, 구성도·차트, MCP 11툴+CLI, 미리보기·양식 추출)에 더해, M2 개발 스킬이 동작한다. `fastapi-service` 는 완전한 예제 서비스와 `scaffold.py`(7옵션)로 골격을 만든다. 생성된 서비스는 그대로 `uv run pytest` 를 통과한다(게이트웨이 경유 LLM 호출, respx 모킹). `gitlab-ci`(파이프라인+`ci_lint`), `py-test`(`test_gaps`), `py-review`(체크리스트), `py-refactor`(`import_graph`, 순환·레이어 검사)와 공용 참조 `python-conventions`·`genai-patterns` 를 갖췄다. 검증: `uv run pytest` 139 PASS(+manual 1), `ruff check`·`format --check` clean, `doc_lint --all` 하드 0(75파일). 미해결 결정 없음(§14 추천값 적용). 다음은 M3 LLM 운영(llm-gateway·litellm-ops MCP·model-serving·ai-trend-brief). 구현은 Claude Opus 4.8이 PRD와 [CLAUDE.md](CLAUDE.md)만 보고 진행한다.
 - 외부 사실 출처: [docs/research/sources-2026-09-04.md](docs/research/sources-2026-09-04.md)
 - 선행 자산: `../ui-skill-set`(구조·훅·설치기 원형), `../품의서/.claude/skills/review-report-writer`(문체 규칙 원형)
 

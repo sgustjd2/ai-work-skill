@@ -5,16 +5,16 @@
 | 공고 항목 | 스킬·도구 | FR | 단위 테스트 | 골든 | 마일스톤 | 검증(결과) |
 |---|---|---|---|---|---|---|
 | FastAPI 개발 환경 구축 | fastapi-service, scaffold.py, route_table.py | FR-20, 26, 35 | test_scripts | 03 | M2 | |
-| GitLab CI/CD 빌드·배포 | gitlab-ci, ci_lint.py, GitLab MCP | FR-21 | test_scripts | 03 | M2 | |
-| 코드 모듈화·구조 개선 | py-refactor, import_graph.py | FR-24 | test_scripts | 08 | M2 | |
-| 코드 리뷰 | py-review, GitLab MCP | FR-23 | 픽스처 diff | 04 | M2 | |
-| Unit 테스트 | py-test, test_gaps.py, py_format.py | FR-22, 25 | test_py_format | 03 | M2 | py_format: 순수 함수 테스트 PASS(M0 선행), 통합 M2 |
+| GitLab CI/CD 빌드·배포 | gitlab-ci, ci_lint.py, GitLab MCP | FR-21 | test_m2_scripts(ci_lint) | 03 | M2 | **완료**: .gitlab-ci.yml·MR/이슈 템플릿·CODEOWNERS·references 4종, ci_lint 3테스트 |
+| 코드 모듈화·구조 개선 | py-refactor, import_graph.py | FR-24 | test_m2_scripts(import_graph) | 08 | M2 | **완료**: 순환(Tarjan)·레이어 위반·긴 파일, 2테스트 |
+| 코드 리뷰 | py-review, GitLab MCP | FR-23 | checklist.md | 04 | M2 | **완료**: SKILL + 체크리스트(항목 ID), MR 리뷰 흐름 |
+| Unit 테스트 | py-test, test_gaps.py, py_format.py | FR-22, 25 | test_m2_scripts(test_gaps), test_py_format | 03 | M2 | **완료**: SKILL + pytest-conventions·llm-mocking, test_gaps 1테스트 |
 | 개발 가이드·교육 | doc-write(가이드·교육), deck-write | FR-7, 17 | docgen | 07 | M0, M1 | doc-write SKILL·references M0 완료, 렌더링 M1 |
 | 생성형 AI 서비스 분석·설계 | doc-write(설계서), genai-patterns, docgen | FR-7, 9~12, 19, 35, 36 | docgen | 01, 02 | M1 | doc-write M0 완료, docgen M1 |
-| 생성형 AI 서비스 개발·유지보수 | fastapi-service, llm-gateway | FR-20, 27, 35 | test_scripts | 03, 05 | M2, M3 | |
+| 생성형 AI 서비스 개발·유지보수 | fastapi-service, llm-gateway | FR-20, 27, 35 | test_m2_scripts(scaffold·route_table), 생성 서비스 pytest | 03, 05 | M2, M3 | **M2 완료**: 예제 서비스+scaffold(7옵션)+route_table, 생성 골격 pytest 통과(base 8, sse 9) |
 | API·오픈소스 활용 | llm-gateway, model-serving | FR-27, 29 | litellm_ops | 05 | M3 | |
 | 최신 AI 트렌드 조사·적용 | ai-trend-brief | FR-30 | check_output | 06 | M3 | |
-| LLM 이해·API 사용 | client_example.py, python-conventions | FR-26, 27 | 골격 test | 03 | M2, M3 | |
+| LLM 이해·API 사용 | LLMClient(게이트웨이), python-conventions | FR-26, 27 | 생성 서비스 test_llm_client | 03 | M2, M3 | **M2 완료**: 게이트웨이 클라이언트·재시도·비용헤더·프롬프트 로더, python-conventions |
 | 모델 최적화·서빙 | model-serving, vram_estimate.py | FR-29 | test_scripts | manual | M3 | |
 | 클라우드(Azure/AWS/GCP) | 참조 문서, deploy-targets | FR-21, 27 | config_validate | 05 | M2, M3 | |
 | LiteLLM·LLM Gateway 구축 | llm-gateway, litellm-ops MCP | FR-27, 28 | litellm_ops | 05 | M3 | |
@@ -53,3 +53,17 @@ FR-9~19, 36 전부 구현. docgen 테스트 53개 + M0 72개 = 125 PASS. ruff·d
 - FR-25 py_format(M0 선행): `templates/py_format.py` + `tests/test_py_format.py`. 통합 테스트는 M2.
 - FR-37 저장소 CLAUDE.md·research: 유지.
 - 검증 명령: `uv run pytest`(72 PASS), `uv run ruff check`·`format --check`(clean), `doc_lint.py --all docs skills README.md`(하드 0).
+
+## M2 완료 (개발 스킬, 2026-09-04)
+
+FR-20~26, 35 전부 구현. 스크립트 단위 테스트 10개 추가(누적 139 PASS, manual 1 제외). ruff·doc_lint 통과.
+
+- FR-20 fastapi-service: SKILL + `assets/service/`(완전한 예제 서비스, 프롬프트 파일 로더) + `scripts/scaffold.py`(7옵션: db·redis·sse·auth·rag·jobs·otel, 마커 기반 가지치기, pyproject·compose·.env·README 생성) + `scripts/route_table.py`(openapi 기반, --md·--openapi). **생성 골격이 실제로 uv sync + pytest 통과**(base 8, --with-sse 9).
+- FR-21 gitlab-ci: SKILL + `assets/`(.gitlab-ci.yml: workflow·5스테이지·uv 캐시·kaniko·SAST·환경별 배포, MR/이슈 템플릿, CODEOWNERS) + `scripts/ci_lint.py`(로컬 구조검사 + GitLab CI Lint API) + `references/`(deploy-targets·pipeline-recipes·gitlab-mcp-playbook·branching).
+- FR-22 py-test: SKILL + `references/`(pytest-conventions·llm-mocking) + `scripts/test_gaps.py`(ast, 미참조 공개함수).
+- FR-23 py-review: SKILL + `references/checklist.md`(항목 ID, 호출자 추적) + MR 리뷰 흐름(GitLab MCP, 승인 후 게시).
+- FR-24 py-refactor: SKILL + `scripts/import_graph.py`(ast, Tarjan SCC 순환, 레이어 위반, 팬인/팬아웃, 긴 파일).
+- FR-25 py_format: M0 선행 완료.
+- FR-26 python-conventions.md, FR-35 genai-patterns.md: 플러그인 루트 `references/`(공용). RAG·프롬프트·구조화 출력·비동기·가드레일·평가.
+- 스크립트는 전부 표준 라이브러리만. 서비스 자산은 `{{pkg}}` 토큰 템플릿이라 ruff 에서 제외(extend-exclude).
+- 다음: M3(LLM 운영: llm-gateway·litellm-ops MCP·model-serving·ai-trend-brief).

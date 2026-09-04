@@ -1,0 +1,110 @@
+# GitLab CI/CD — uv 기반 Python 서비스 표준 파이프라인.
+# 배포 스크립트는 references/deploy-targets.md 의 대상별 블록으로 교체한다.
+stages:
+  - lint
+  - test
+  - build
+  - scan
+  - deploy
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_TAG
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+default:
+  image: python:3.12-slim
+  cache:
+    key:
+      files:
+        - uv.lock
+    paths:
+      - .uv-cache
+  before_script:
+    - pip install --quiet uv
+    - export UV_CACHE_DIR=.uv-cache
+
+variables:
+  UV_CACHE_DIR: .uv-cache
+
+lint:
+  stage: lint
+  script:
+    - uv run ruff check .
+    - uv run ruff format --check .
+
+test:
+  stage: test
+  script:
+    - uv run pytest --junitxml=report.xml --cov --cov-report=xml
+  coverage: '/(?i)total.*? (100(?:\.0+)?|[1-9]?\d(?:\.\d+)?)%/'
+  artifacts:
+    when: always
+    reports:
+      junit: report.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+
+build:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  before_script: []
+  script:
+    - /kaniko/executor
+      --context "$CI_PROJECT_DIR"
+      --dockerfile "$CI_PROJECT_DIR/Dockerfile"
+      --destination "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
+      $( [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ] && echo "--destination $CI_REGISTRY_IMAGE:latest" )
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_TAG
+
+include:
+  - template: Security/SAST.gitlab-ci.yml
+  - template: Security/Container-Scanning.gitlab-ci.yml
+
+sast:
+  stage: scan
+  allow_failure: true
+
+container_scanning:
+  stage: scan
+  allow_failure: true
+
+.deploy:
+  stage: deploy
+  script:
+    - echo "references/deploy-targets.md 의 대상별 스크립트로 교체한다."
+
+deploy_dev:
+  extends: .deploy
+  environment:
+    name: dev
+    url: https://dev.example.internal
+  resource_group: dev
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+deploy_stg:
+  extends: .deploy
+  environment:
+    name: stg
+    url: https://stg.example.internal
+  resource_group: stg
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
+
+deploy_prod:
+  extends: .deploy
+  environment:
+    name: prod
+    url: https://prod.example.internal
+  resource_group: prod
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: manual

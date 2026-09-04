@@ -26,6 +26,8 @@ markers = [
 [tool.ruff]
 line-length = 100
 target-version = "py39"          # templates/·skills/ 는 3.9 문법
+# 서비스 골격 자산은 {{pkg}} 토큰이 든 템플릿이라 유효한 파이썬이 아니다(스캐폴드 시 치환).
+extend-exclude = ["**/assets/service/**"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "ASYNC"]
