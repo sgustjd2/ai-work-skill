@@ -1,0 +1,29 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+junit.xml
+
+# 렌더 결과물 (원본 .doc.md/.deck.md만 커밋)
+docs/_build/
+*.docx
+*.pptx
+*.pdf
+!mcp/docgen/fixtures/**/*.docx
+!mcp/docgen/fixtures/**/*.pptx
+
+# 환경
+.env
+.env.*
+!.env.example
+
+# 편집기·OS
+.idea/
+.vscode/
+Thumbs.db
+.DS_Store
