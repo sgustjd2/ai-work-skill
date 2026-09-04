@@ -73,6 +73,12 @@ MCP 로 쓸 때는 `docgen` 이 문서·덱·구성도를, `litellm-ops` 가 게
 
 > 위 예시는 저장소 기준 명령이다. 실제 사내 환경(공식 문서 템플릿, GitLab 버전, 게이트웨이 주소)에 맞춘 확인은 PRD 부록 F 를 따른다.
 
+## 다른 에이전트에서 쓰기
+
+Claude Code 플러그인이 기본이지만, 표준을 써서 Codex·Gemini·Grok 에도 붙일 수 있다. MCP 서버(`docgen`·`litellm-ops`)는 MCP 를 지원하는 어느 호스트에서도 같은 툴을 노출하고, 스크립트는 표준 라이브러리 CLI 라 셸에서 바로 돌아간다. 스킬은 마크다운이라 호스트가 지시로 읽는다. 호스트에 묶이는 것은 편집 직전 자동 차단(훅)뿐이고, 그 검사도 CI 나 pre-commit 으로 대체된다.
+
+호스트별 설정과 검증 상태(확인됨·문서상)는 [docs/hosts.md](docs/hosts.md), 벤더 중립 진입 문서는 [AGENTS.md](AGENTS.md) 를 본다. 저장소 루트에 Claude 용 `.claude-plugin/` 과 Codex 용 `.codex-plugin/` 을 함께 두었다.
+
 ## 개발
 
 ```bash

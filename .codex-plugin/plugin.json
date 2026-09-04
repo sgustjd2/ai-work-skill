@@ -1,0 +1,11 @@
+{
+  "name": "ai-work-skill",
+  "version": "0.1.0",
+  "description": "생성형 AI 서비스 개발 조직용 스킬 세트 — FastAPI·GitLab CI/CD·코드 리뷰/테스트/리팩토링·LiteLLM 게이트웨이·문서(docx)/덱(pptx)·AI 트렌드. Claude·Codex 공용. MCP 서버(docgen·litellm-ops)는 MCP 를 지원하는 어느 호스트에서도 동작한다.",
+  "skills": "./skills/",
+  "author": { "name": "sgustjd2" },
+  "homepage": "https://github.com/sgustjd2/ai-work-skill",
+  "repository": "https://github.com/sgustjd2/ai-work-skill",
+  "license": "MIT",
+  "keywords": ["fastapi", "gitlab", "litellm", "docx", "pptx", "korean", "anti-slop", "mcp"]
+}
