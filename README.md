@@ -26,6 +26,52 @@ claude plugin marketplace add sgustjd2/ai-work-skill
 
 그다음 `/plugin install ai-work-skill@ai-work-skill`. MCP 서버(`docgen`·`litellm-ops`)는 `uv` 가 필요하다. 프로젝트에 훅·`STYLE.md`·규약을 넣으려면 `/ai-init` 을 실행한다(문서 스킬은 `STYLE.md` 가 있어야 동작한다).
 
+## 사용 예시
+
+설치한 뒤에는 특별한 명령이 필요 없다. Claude Code 에게 평소 말로 부탁하면 맞는 스킬이 뜬다. 아래는 무슨 말이 어떤 스킬로 이어지고 무엇이 나오는지다.
+
+| 하고 싶은 일 | 이렇게 말한다 | 나오는 것 |
+|---|---|---|
+| 설계서 | "LLM 게이트웨이 도입 설계서 docx 로 써줘" | `docs/arch/*.doc.md` 와 렌더된 docx(표지·목차·구성도·표) |
+| 덱 | "이 설계서를 경영진 10장 덱으로" | `docs/deck/*.deck.md` 와 pptx(헤드 메시지·네이티브 차트·편집 가능한 구성도) |
+| 서비스 골격 | "문서 요약 API 서비스 골격 잡아줘. 게이트웨이 경유, 테스트·Docker 포함" | 실행되는 FastAPI 프로젝트(그대로 `uv run pytest` 통과) |
+| CI | "이 프로젝트에 GitLab CI 만들어줘" | `.gitlab-ci.yml`·MR 템플릿·CODEOWNERS |
+| 코드 리뷰 | "MR !42 리뷰해줘" | 심각도·파일:줄·수정안 형식 리뷰(게시는 승인 후) |
+| 게이트웨이 설정 | "Azure 두 리전에 Bedrock 폴백으로 litellm config 만들어줘" | 검증을 통과하는 `config.yaml` |
+| 트렌드 | "이번 주 AI 트렌드 브리프" | `docs/trends/YYYY-Www.md`(항목마다 출처·영향·적용) |
+
+### 문서 한 편을 끝까지
+
+설계서를 부탁하면 스킬이 `STYLE.md` 를 읽고 한 줄로 방향을 선언한 뒤 `.doc.md` 로 초안을 쓴다. 그다음 렌더링한다.
+
+```bash
+uv run --project mcp/docgen python -m docgen render-docx docs/arch/gateway.doc.md --out docs/_build/gateway.docx
+```
+
+편집 도중 em-dash 나 상투어, 이모지를 쓰려 하면 훅이 저장 직전에 막는다. 색은 데이타솔루션 팔레트만 나온다.
+
+### 직접 실행하는 도구
+
+스킬을 거치지 않고 스크립트나 MCP 를 바로 부를 수도 있다.
+
+```bash
+# 서비스 골격(옵션: --with-db --with-redis --with-sse --with-auth --with-rag --with-jobs --with-otel)
+uv run python skills/fastapi-service/scripts/scaffold.py --name summ_api --target ./summ_api --with-sse
+
+# 게이트웨이 설정 검증(V1~V8)
+uv run --project mcp/litellm_ops python -m litellm_ops config-validate config.yaml
+
+# 순환 import·레이어 위반 검사
+uv run python skills/py-refactor/scripts/import_graph.py summ_api
+
+# 서빙 VRAM 산정
+uv run python skills/model-serving/scripts/vram_estimate.py --params 32 --dtype fp16 --ctx 32768 --batch 8
+```
+
+MCP 로 쓸 때는 `docgen` 이 문서·덱·구성도를, `litellm-ops` 가 게이트웨이 상태·비용·키·설정 검증을 툴로 노출한다. 키 발급·차단은 `LITELLM_OPS_ALLOW_WRITE=true` 일 때만 동작한다.
+
+> 위 예시는 저장소 기준 명령이다. 실제 사내 환경(공식 문서 템플릿, GitLab 버전, 게이트웨이 주소)에 맞춘 확인은 PRD 부록 F 를 따른다.
+
 ## 개발
 
 ```bash
