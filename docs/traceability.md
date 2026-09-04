@@ -21,6 +21,15 @@
 | 문서·덱이 회사 것처럼 | STYLE.md, 테마, doc_lint, 부록 B | FR-1~5, 10, 11, 18 | test_doc_lint, test_theme, test_install | 01, 02, 07 | M0, M1 | M0 완료: doc_lint(H1~H10·S1~S18)·테마·install·STYLE.md, 72 테스트 PASS |
 | ui-skill-set 연동 | theme_export, install --with-ui | FR-33 | test_theme | manual | M4 | |
 
+## M1 진행 (docgen, 2026-09-04)
+
+- FR-9 파서: `mcp/docgen/docgen/parse.py`. `.doc.md`/`.deck.md` -> frontmatter + 블록 모델. `test_parse.py` PASS.
+- FR-14 lint 단일 구현: `docgen/lint.py` 가 `templates/doc_lint.py` 의 lint() 를 그대로 import. `test_lint_bridge.py` 로 드리프트 차단.
+- FR-12 구성도: `diagram/{layout,mermaid,png}.py`. 결정적 배치 + mermaid + PNG(Pillow, 한글 폰트 자동 탐색, 없으면 mermaid 대체). `test_diagram.py` PASS.
+- FR-10 docx: `docx_render.py`. 표지·개정이력·목차 필드·머리글/바닥글·쪽번호·스타일 6종·eastAsia 폰트·wordWrap·표 헤더 음영·캡션·마커 형광·구성도 PNG 삽입. `test_docx.py` PASS(unzip 검증).
+- 공용: `theme.py`(로드·색 역할·tint), `core.py`(기준 디렉터리·STYLE.md·출력 경로). 루트 `pyproject.toml` 에 workspace member + docgen dev dep.
+- 남은 M1: FR-11 pptx 렌더, FR-13 MCP 서버+CLI, FR-15 preview, FR-16 extract/theme_from_pptx, FR-17 deck-write, FR-19 arch-doc-types, FR-36 diagram_from_compose. 현재 docgen 테스트 19개 + M0 72개 = 91 PASS.
+
 ## M0 완료 근거 (2026-09-04)
 
 - FR-1 STYLE.md: `templates/STYLE.md`. frontmatter 스키마 + 6절 본문.
