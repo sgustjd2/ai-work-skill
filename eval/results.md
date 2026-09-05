@@ -30,14 +30,15 @@ Claude 가 아닌 범용 MCP stdio 클라이언트로 두 서버에 붙여 확�
 
 ### 실제 호스트 (2026-09-05)
 
-Codex CLI 와 Gemini CLI 를 npm 전역 설치하고 두 서버를 등록했다.
+Codex·Gemini CLI 를 npm 전역 설치하고 두 서버를 등록했다. Antigravity IDE 에도 MCP 설정을 넣었다.
 
-| 호스트 | 버전 | 등록 | 실제 툴 호출 |
+| 호스트 | 버전 | 등록 | 실제 호출 |
 |---|---|---|---|
-| Codex CLI | 0.153.3 | `codex mcp add` 2개 enabled | gpt-5.6-luna 가 theme_export·config_validate 호출 성공(`codex exec --approve-for-me`) |
-| Gemini CLI | 0.58.0 | `gemini mcp add -s user` 2개 | 미실행. 폴더 신뢰·Google 로그인 필요(사용자 몫) |
+| Codex CLI | 0.153.3 | `codex mcp add` 2개 | gpt-5.6-luna 가 theme_export·config_validate 호출 성공(`codex exec --approve-for-me`) |
+| Gemini CLI | 0.58.0 | `gemini mcp add -s user` 2개 | `gemini mcp list` 두 서버 `✓ Connected`. 에이전트 턴은 로그인 필요(활성 계정 없음, 구글 개인 로그인 중단) |
+| Antigravity | 1.107 | `mcp_config.json` 스키마 검증 | IDE 라 헤드리스 불가. 설정만 완료, 호출은 IDE 에서 |
 
-Codex 는 MCP 툴 호출에 승인이 필요하다. 헤드리스에선 `--approve-for-me` 로 통과시켰다. 등록·실행 명령은 `docs/hosts.md` 를 본다.
+Codex 는 MCP 툴 호출에 승인이 필요하다. 헤드리스에선 `--approve-for-me` 로 통과시켰다. Gemini 는 신뢰된 디렉터리에서만 MCP 가 켜진다. 등록·실행 명령은 `docs/hosts.md` 를 본다.
 
 ## check_output 기준선
 
