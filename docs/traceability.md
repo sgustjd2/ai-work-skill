@@ -92,9 +92,9 @@ FR-31~34 전부 구현. 누적 171 테스트 PASS(+manual 1), ruff clean, doc_li
 - FR-34 CI: `.github/workflows/ci.yml`(ubuntu+windows 매트릭스, uv sync·ruff check·format·pytest·doc_lint --all). 렌더러 hex 리터럴 0 검사는 pytest(test_theme)로.
 - 배포 경로: `claude plugin marketplace add sgustjd2/ai-work-skill` → `/plugin install`. MCP 는 `uv` 필요.
 
-## M5 완료 (사람화, 2026-09-06)
+## M5 완료 (사람화·다이어그램 연동, 2026-09-06)
 
-FR-39 구현. `tests/test_humanize_scan.py` 7개 + stdlib 검사 1개 추가(누적 179 PASS, manual 1 제외). ruff·doc_lint(103파일 하드 0) 통과.
+FR-39·FR-40 구현으로 프로젝트 M0~M5 전체 완료, **v0.2.0 배포**(태그 v0.1.0·v0.2.0, GitHub 릴리스). `tests/test_humanize_scan.py` 7개 + stdlib 검사 1개 + install archify 테스트 1개 추가(누적 180 PASS, manual 1 제외). ruff·doc_lint(104파일 하드 0) 통과.
 
 - FR-39 humanize: SKILL(모드 3종 사전·진단·재작성, 101줄) + `references/three-axes.md`(축별 질문·신호 6개·부족한 축 기준·원본성 대조) + `references/verify-table.md`(확인 후보 종류 5·표 형식·근거 규칙) + `scripts/humanize_scan.py`(확인 후보·일반화·교훈형 마무리·균일 문단·불릿 비율·반복 종결·재료 밀도, 표준 라이브러리, 종료 0).
 - 연결: `doc-write` 절차 2·7, `deck-write` 절차 7, `preflight-doc.md` 공통 점검 2항목, `templates/CLAUDE.snippet.md` 규약 1줄, `skills/llms.txt` 12줄, README·AGENTS.md·hosts.md·플러그인 매니페스트 키워드.
