@@ -7,7 +7,7 @@
 | 층 | 내용 | 이식성 |
 |---|---|---|
 | MCP 서버 | `docgen`(문서·덱·구성도), `litellm-ops`(게이트웨이 운영·config 검증) | MCP 를 지원하는 어느 호스트에서도 동작. stdio 표준 |
-| 스크립트 | `scaffold`·`import_graph`·`test_gaps`·`ci_lint`·`vram_estimate`·`bench_llm`·`doc_lint`·`py_format` | 표준 라이브러리 CLI. 셸에서 바로 실행 |
+| 스크립트 | `scaffold`·`import_graph`·`test_gaps`·`ci_lint`·`vram_estimate`·`bench_llm`·`humanize_scan`·`doc_lint`·`py_format` | 표준 라이브러리 CLI. 셸에서 바로 실행 |
 | 스킬 문서 | `skills/*/SKILL.md` 와 `references/` | 마크다운. 호스트가 지시로 읽는다 |
 | 편집 훅 | `doc_lint --pre/--stop`, `py_format --post` | 호스트별. Claude 는 settings.json, 나머지는 pre-commit·CI 로 |
 

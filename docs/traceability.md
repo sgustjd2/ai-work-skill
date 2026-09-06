@@ -14,6 +14,7 @@
 | 생성형 AI 서비스 개발·유지보수 | fastapi-service, llm-gateway | FR-20, 27, 35 | test_m2_scripts(scaffold·route_table), 생성 서비스 pytest | 03, 05 | M2, M3 | **M2 완료**: 예제 서비스+scaffold(7옵션)+route_table, 생성 골격 pytest 통과(base 8, sse 9) |
 | API·오픈소스 활용 | llm-gateway, model-serving | FR-27, 29 | litellm_ops(21), vram/bench(5) | 05 | M3 | **완료**: 게이트웨이 설정·클라이언트, vLLM·양자화 참조 |
 | 최신 AI 트렌드 조사·적용 | ai-trend-brief | FR-30 | (형식은 M4 eval) | 06 | M3 | **완료**: SKILL + sources.yaml + brief-template |
+| (사용자 추가 요구) 산출물 사람화 | humanize, humanize_scan.py, 부록 G | FR-39 | test_humanize_scan | 09 | M5 | **완료**: SKILL(사전·진단·재작성) + references 2종 + 스크립트, 7 테스트 |
 | LLM 이해·API 사용 | LLMClient(게이트웨이), python-conventions | FR-26, 27 | 생성 서비스 test_llm_client | 03 | M2, M3 | **M2 완료**: 게이트웨이 클라이언트·재시도·비용헤더·프롬프트 로더, python-conventions |
 | 모델 최적화·서빙 | model-serving, vram_estimate·bench_llm | FR-29 | test_m3_scripts(5) | manual | M3 | **완료**: VRAM 산정·벤치, sizing·quantization·vllm·alternatives |
 | 클라우드(Azure/AWS/GCP) | azure·bedrock·vertex 참조, deploy-targets | FR-21, 27 | config_validate 픽스처 | 05 | M2, M3 | **M3 완료**: 제공자 3종 연결 참조, config.example 검증 통과 |
@@ -89,3 +90,12 @@ FR-31~34 전부 구현. 누적 171 테스트 PASS(+manual 1), ruff clean, doc_li
 - FR-33 ui 연동: `install.py accent_ramp`(테마 action→--ui-accent-100..900, hex 리터럴 없음) + `inject_accent_ramp`(tokens.css 교체). `--with-ui` 가 install.mjs 실행 후 램프 주입.
 - FR-34 CI: `.github/workflows/ci.yml`(ubuntu+windows 매트릭스, uv sync·ruff check·format·pytest·doc_lint --all). 렌더러 hex 리터럴 0 검사는 pytest(test_theme)로.
 - 배포 경로: `claude plugin marketplace add sgustjd2/ai-work-skill` → `/plugin install`. MCP 는 `uv` 필요.
+
+## M5 완료 (사람화, 2026-09-06)
+
+FR-39 구현. `tests/test_humanize_scan.py` 7개 + stdlib 검사 1개 추가(누적 179 PASS, manual 1 제외). ruff·doc_lint(103파일 하드 0) 통과.
+
+- FR-39 humanize: SKILL(모드 3종 사전·진단·재작성, 101줄) + `references/three-axes.md`(축별 질문·신호 6개·부족한 축 기준·원본성 대조) + `references/verify-table.md`(확인 후보 종류 5·표 형식·근거 규칙) + `scripts/humanize_scan.py`(확인 후보·일반화·교훈형 마무리·균일 문단·불릿 비율·반복 종결·재료 밀도, 표준 라이브러리, 종료 0).
+- 연결: `doc-write` 절차 2·7, `deck-write` 절차 7, `preflight-doc.md` 공통 점검 2항목, `templates/CLAUDE.snippet.md` 규약 1줄, `skills/llms.txt` 12줄, README·AGENTS.md·hosts.md·플러그인 매니페스트 키워드.
+- 원천: 위키독스 "누구나 할 수 있는 AI 글쓰기" 02장 4개 절(`docs/research/sources-2026-09-06.md`, PRD 부록 G). 표면 신호는 doc_lint 가 이미 잡으므로 스크립트는 재료·판단·근거만 본다(D15: 훅이 아니라 스킬이 부르는 스크립트).
+- 골든 09(`eval/prompts/09-humanize.md`): 픽스처에 `humanize_scan` 을 돌려 확인 후보 2건(근거 없음 2)·신호 3종·재료 밀도 0.07 을 확인. 진단→재작성 재현은 스킬이 붙은 세션에서.

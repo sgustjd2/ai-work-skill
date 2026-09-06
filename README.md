@@ -1,19 +1,19 @@
 # ai-work-skill
 
 생성형 AI 서비스 개발 조직(데이타솔루션)에서 매일 하는 일을 Claude Code가 회사 표준대로 해내게 하는 스킬 세트.
-FastAPI 서비스 골격, GitLab CI/CD, 코드 리뷰·테스트·리팩토링, LiteLLM 게이트웨이 운영, 아키텍처 문서(docx)·덱(pptx) 생성, AI 트렌드 브리프를 다룬다.
+FastAPI 서비스 골격, GitLab CI/CD, 코드 리뷰·테스트·리팩토링, LiteLLM 게이트웨이 운영, 아키텍처 문서(docx)·덱(pptx) 생성, AI 트렌드 브리프, AI 초안 사람화(3축 진단·확인 후보)를 다룬다.
 문서는 데이타솔루션 팔레트와 한국 기업 문서체로 나오고, AI 문체는 훅이 파일에 닿기 전에 차단한다.
 
 - 설계 문서: [docs/PRD.md](docs/PRD.md) · 구현 규약: [CLAUDE.md](CLAUDE.md) · 골든 재현 결과: [eval/results.md](eval/results.md) · 외부 사실 출처: [docs/research/sources-2026-09-04.md](docs/research/sources-2026-09-04.md)
 - 합류 첫 주 확인 목록(공식 템플릿·GitLab 버전·게이트웨이 등 실환경 값): [PRD 부록 F](docs/PRD.md#부록-f-합류-첫-주-확인-목록-결정값을-실제로-바꿀-정보)
-- 상태: **완성** (2026-09-04). M0~M4 전체 구현. 스킬 11개 + MCP 서버 2개(docgen·litellm-ops) + 훅 2개. 검증: `uv run pytest` 171 PASS(+manual 1), `ruff check`·`format --check` clean, `doc_lint --all` 하드 위반 0(97파일). 생성 FastAPI 골격이 그대로 `uv run pytest` 통과, `config.example.yaml` 이 `config_validate` 통과, 설계서 docx·덱 pptx 가 실제 렌더되고 `check_output` PASS. 골든 프롬프트 8개 재현 결과는 [eval/results.md](eval/results.md) 를 본다. 선행 자산: `../ui-skill-set`(구조·훅 원형), `../품의서/.claude/skills/review-report-writer`(문체 규칙 원형).
+- 상태: **완성** (2026-09-04, M5 사람화 2026-09-06). M0~M5 전체 구현. 스킬 12개 + MCP 서버 2개(docgen·litellm-ops) + 훅 2개. 검증: `uv run pytest` 179 PASS(+manual 1), `ruff check`·`format --check` clean, `doc_lint --all` 하드 위반 0(103파일). 생성 FastAPI 골격이 그대로 `uv run pytest` 통과, `config.example.yaml` 이 `config_validate` 통과, 설계서 docx·덱 pptx 가 실제 렌더되고 `check_output` PASS. 골든 프롬프트 8개 재현 결과는 [eval/results.md](eval/results.md) 를 본다(09 사람화는 스킬 세션에서 재현). 선행 자산: `../ui-skill-set`(구조·훅 원형), `../품의서/.claude/skills/review-report-writer`(문체 규칙 원형), 위키독스 "누구나 할 수 있는 AI 글쓰기" 02장(3축 개념, [docs/research/sources-2026-09-06.md](docs/research/sources-2026-09-06.md)).
 
 ## 구성
 
 | 계층 | 내용 |
 |---|---|
 | 에셋 | `templates/STYLE.md`(문서 계약), `themes/datasolution.json`(팔레트·폰트·치수), `skills/fastapi-service/assets/`(예제 서비스), `skills/llm-gateway/assets/config.example.yaml` |
-| 룰 | 스킬 11개: `ai-init` `doc-write` `deck-write` `fastapi-service` `gitlab-ci` `py-review` `py-test` `py-refactor` `llm-gateway` `model-serving` `ai-trend-brief` |
+| 룰 | 스킬 12개: `ai-init` `doc-write` `deck-write` `fastapi-service` `gitlab-ci` `py-review` `py-test` `py-refactor` `llm-gateway` `model-serving` `ai-trend-brief` `humanize` |
 | 하네스 | `templates/doc_lint.py`(편집 전 AI 문체 차단·종료 전 점검), `templates/py_format.py`(편집 후 ruff) |
 | 도구 | MCP `docgen`(md → docx/pptx, 구성도·차트, 미리보기, 양식 추출), `litellm-ops`(게이트웨이 상태·비용·키·config 검증 12툴), GitLab 공식 MCP(설정만) |
 
@@ -40,6 +40,7 @@ claude plugin marketplace add sgustjd2/ai-work-skill
 | 코드 리뷰 | "MR !42 리뷰해줘" | 심각도·파일:줄·수정안 형식 리뷰(게시는 승인 후) |
 | 게이트웨이 설정 | "Azure 두 리전에 Bedrock 폴백으로 litellm config 만들어줘" | 검증을 통과하는 `config.yaml` |
 | 트렌드 | "이번 주 AI 트렌드 브리프" | `docs/trends/YYYY-Www.md`(항목마다 출처·영향·적용) |
+| AI 초안 사람화 | "이 초안 AI 티 나는데 내 재료로 고쳐줘" | 3축(문체·재료·판단) 진단 보고와 확인 후보 표, 재료를 받은 뒤 재작성 |
 
 ### 문서 한 편을 끝까지
 
@@ -67,6 +68,9 @@ uv run python skills/py-refactor/scripts/import_graph.py summ_api
 
 # 서빙 VRAM 산정
 uv run python skills/model-serving/scripts/vram_estimate.py --params 32 --dtype fp16 --ctx 32768 --batch 8
+
+# 초안의 확인 후보(수치·출처·인용·고유명사·제도)·평균값 신호·재료 밀도
+uv run python skills/humanize/scripts/humanize_scan.py docs/arch/gateway.doc.md
 ```
 
 MCP 로 쓸 때는 `docgen` 이 문서·덱·구성도를, `litellm-ops` 가 게이트웨이 상태·비용·키·설정 검증을 툴로 노출한다. 키 발급·차단은 `LITELLM_OPS_ALLOW_WRITE=true` 일 때만 동작한다.

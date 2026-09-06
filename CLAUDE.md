@@ -4,7 +4,7 @@
 
 ## 시작 전에 읽는 순서
 1. `docs/PRD.md` §16(구현 지침) → §13(마일스톤) → 현재 마일스톤의 FR 행(§6) → 해당 §8~§11 절.
-2. `docs/research/sources-2026-09-04.md`: 외부 사실(GitLab MCP, LiteLLM API, FastMCP, 브랜드 색)의 출처와 확인일. 현재 문서와 다르면 현재 문서를 따르고 차이를 여기에 한 줄 기록한다.
+2. `docs/research/sources-2026-09-04.md`: 외부 사실(GitLab MCP, LiteLLM API, FastMCP, 브랜드 색)의 출처와 확인일. 현재 문서와 다르면 현재 문서를 따르고 차이를 여기에 한 줄 기록한다. `sources-2026-09-06.md` 는 `humanize` 스킬의 원천(위키독스 3축).
 3. 포팅 원형: `../ui-skill-set/templates/design-lint.mjs`(훅 구조), `../ui-skill-set/templates/install.mjs`(병합 함수), `../품의서/.claude/skills/review-report-writer/references/writing-rules.md`(문체 규칙). 구조를 옮기되 파일을 복사하지 않는다.
 
 ## 의존성 정책

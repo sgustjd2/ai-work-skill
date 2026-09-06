@@ -6,9 +6,9 @@ doc_lint: off
 
 | | |
 |---|---|
-| 버전 | 0.2 (초안, 구현 전). 0.1의 누락 점검 결과 반영: MCP 경로 해석(§9), H6 한국 문서 기호 예외·H9 자리표시자 예외·H10 렌더러 우회 차단(§7.1), S18 용어 통일(§7.2), GenAI 패턴·RAG·프롬프트 관리(§8.4, §8.12), 팀 예산 툴(§9.1), 차트 DSL·docx 템플릿 모드·결과물 위치(§10), 구현자용 `CLAUDE.md`(§11.9), 금지 표현 사전 전문(부록 B), 추적표(부록 E), 합류 첫 주 확인 목록(부록 F) |
+| 버전 | 0.2 (초안, 구현 전). 0.1의 누락 점검 결과 반영: MCP 경로 해석(§9), H6 한국 문서 기호 예외·H9 자리표시자 예외·H10 렌더러 우회 차단(§7.1), S18 용어 통일(§7.2), GenAI 패턴·RAG·프롬프트 관리(§8.4, §8.12), 팀 예산 툴(§9.1), 차트 DSL·docx 템플릿 모드·결과물 위치(§10), 구현자용 `CLAUDE.md`(§11.9), 금지 표현 사전 전문(부록 B), 추적표(부록 E), 합류 첫 주 확인 목록(부록 F) · **0.3**(2026-09-06): `humanize` 스킬 추가(§8.14, FR-39, D15, 골든 09, 부록 G). 위키독스 "누구나 할 수 있는 AI 글쓰기" 02장의 3축(문체·재료·판단)을 흡수 |
 | 작성일 | 2026-09-04 |
-| 진행 | **M0~M4 전체 완료**(2026-09-04). M0 골격·훅, M1 docgen(문서·덱), M2 개발 스킬, M3 LLM 운영, M4 배포(플러그인 매니페스트·.mcp.json·llms.txt·eval·CI·ui 연동). 스킬 11 + MCP 2(docgen·litellm-ops) + 훅 2. 171 테스트 PASS(+manual 1), ruff clean, 자기 검사 하드 0(97문서). 생성 FastAPI 골격 실제 pytest 통과, config.example 검증 통과, 설계서 docx·덱 pptx 실제 렌더 + check_output PASS |
+| 진행 | **M0~M4 전체 완료**(2026-09-04). M0 골격·훅, M1 docgen(문서·덱), M2 개발 스킬, M3 LLM 운영, M4 배포(플러그인 매니페스트·.mcp.json·llms.txt·eval·CI·ui 연동). 스킬 11 + MCP 2(docgen·litellm-ops) + 훅 2. 171 테스트 PASS(+manual 1), ruff clean, 자기 검사 하드 0(97문서). 생성 FastAPI 골격 실제 pytest 통과, config.example 검증 통과, 설계서 docx·덱 pptx 실제 렌더 + check_output PASS · **M5 사람화 완료**(2026-09-06): `humanize` 스킬(3축 진단·확인 후보·핵심 3줄) + `humanize_scan.py` + 골든 09. 스킬 12 |
 | 작성 | Claude Fable 5.1 (PRD 전담) |
 | 구현 | Claude Opus 4.8. **이 문서만 보고** 코드를 만든다. 결정이 필요한 곳은 §14의 추천값으로 진행한다 |
 | 저장소 | `E:\workspace\ai-work-skill` (플러그인 이름 `ai-work-skill`, 배포 시 `sgustjd2/ai-work-skill`) |
@@ -19,7 +19,7 @@ doc_lint: off
 
 ## 0. 한 줄 요약
 
-생성형 AI 서비스 개발 조직에서 매일 하는 일, 즉 **FastAPI 서비스 구축 · GitLab CI/CD · 코드 리뷰/단위 테스트/리팩토링 · LiteLLM 게이트웨이 운영 · 아키텍처 문서와 덱 작성 · AI 트렌드 조사**를 Claude Code가 "회사 표준대로" 해내게 하는 **스킬 11개 + MCP 서버 2개 + 훅 2개**. 문서는 데이타솔루션 색과 한국 기업 문서체로 나오고, "AI가 쓴 티"(em-dash·상투어·굵은 라벨 목록·이모지·요약 반복)는 설득이 아니라 **파일에 닿기 전에 차단**한다. 구조는 ui-skill-set의 3계층(에셋·룰·하네스)을 그대로 쓰고, 문서 생성기와 게이트웨이 운영 도구를 MCP로 얹는다.
+생성형 AI 서비스 개발 조직에서 매일 하는 일, 즉 **FastAPI 서비스 구축 · GitLab CI/CD · 코드 리뷰/단위 테스트/리팩토링 · LiteLLM 게이트웨이 운영 · 아키텍처 문서와 덱 작성 · AI 트렌드 조사**를 Claude Code가 "회사 표준대로" 해내게 하는 **스킬 12개 + MCP 서버 2개 + 훅 2개**. 문서는 데이타솔루션 색과 한국 기업 문서체로 나오고, "AI가 쓴 티"(em-dash·상투어·굵은 라벨 목록·이모지·요약 반복)는 설득이 아니라 **파일에 닿기 전에 차단**한다. 차단 뒤에도 남는 재료·판단의 부재(평균값 글, 근거 없는 사실)는 `humanize` 스킬이 3축(문체·재료·판단)으로 진단하고 확인 후보를 표로 뽑는다(§8.14). 구조는 ui-skill-set의 3계층(에셋·룰·하네스)을 그대로 쓰고, 문서 생성기와 게이트웨이 운영 도구를 MCP로 얹는다.
 
 ---
 
@@ -64,7 +64,7 @@ ui-skill-set PRD §1.2의 결론이 문서와 코드에도 그대로 적용된�
 | 계층 | 무엇 | 하는 일 |
 |---|---|---|
 | ① 에셋 | `STYLE.md` + `themes/datasolution.json` + 서비스 골격 템플릿 + `config.example.yaml` | 무엇이 "우리 회사 것"인지 |
-| ② 룰 | 스킬 11개 | 절차와 판단. 언제 무엇을 읽고 어떤 순서로 만드는지 |
+| ② 룰 | 스킬 12개 | 절차와 판단. 언제 무엇을 읽고 어떤 순서로 만드는지 |
 | ③ 하네스 | `doc_lint.py`(편집 전 차단 + 종료 전 점검), `py_format.py`(편집 후 포맷) | 어겼을 때 무엇이 일어나는지 |
 | ④ 도구 | `docgen` MCP(문서 렌더링·린트·미리보기·기존 양식 추출), `litellm-ops` MCP(게이트웨이 상태·비용·키·설정 검증), GitLab 공식 MCP | 모델이 직접 못 하는 결정적 작업 |
 
@@ -154,7 +154,7 @@ ui-skill-set PRD §1.2의 결론이 문서와 코드에도 그대로 적용된�
 │  .mcp.json                  ← gitlab(공식, http) 항목                        │ ④ 도구
 └─────────────────────────────────────────────────────────────────────────┘
 ┌─ ai-work-skill 저장소 (플러그인) ──────────────────────────────────────────┐
-│  skills/*/SKILL.md          ← 절차 11개. 각 ≤ 200줄, references는 필요할 때 │ ② 룰
+│  skills/*/SKILL.md          ← 절차 12개. 각 ≤ 200줄, references는 필요할 때 │ ② 룰
 │  references/                ← 스킬 공용: writing-rules-ko, python-conventions│
 │  themes/datasolution.json   ← 팔레트·폰트·치수 (부록 A)                     │ ① 에셋
 │  templates/                 ← /ai-init이 프로젝트에 복사하는 원본            │
@@ -250,6 +250,7 @@ MCP는 "모델이 직접 하면 틀리거나 위험한 결정적 작업"에만 �
 | FR-36 | `docgen.diagram_from_compose(compose.yaml)`: 서비스·의존(`depends_on`)·포트·이미지에서 구성도 DSL 초안 생성(현행 구성도 자동화) | P2 | M1 |
 | FR-37 | 저장소 루트 `CLAUDE.md`(구현자 규약, §11.9)와 `docs/research/`(사실 확인 출처). PRD 작성 시점에 이미 존재하며 Opus는 유지·갱신만 한다 | P0 | M0 |
 | FR-38 | 부록 E 추적표를 `docs/traceability.md`로 옮겨 마일스톤마다 "테스트·골든 결과" 열을 갱신 | P1 | M0~M4 |
+| FR-39 | `skills/humanize`(§8.14): SKILL.md(모드 3종 사전·진단·재작성) + `references/{three-axes,verify-table}.md` + `scripts/humanize_scan.py`(확인 후보·평균값 신호·재료 밀도, 표준 라이브러리, 종료 0) + 테스트. `doc-write`·`deck-write`·`preflight-doc.md`·`CLAUDE.snippet.md`가 이 스킬을 가리키고, `llms.txt` 12줄, 골든 09 | P0 | M5 |
 
 ---
 
@@ -693,7 +694,76 @@ allowed-tools:
 
 ### 8.13 `skills/llms.txt`
 
-한 줄씩 11개. ui-skill-set 형식. 각 줄은 description의 첫 문장 + 트리거 어휘 5개.
+한 줄씩 12개. ui-skill-set 형식. 각 줄은 description의 첫 문장 + 트리거 어휘 5개.
+
+### 8.14 `humanize` (사람화: 3축 점검과 확인 후보)
+
+```yaml
+---
+name: humanize
+description: >
+  AI 가 만든(또는 AI 티가 나는) 산출물을 사람이 쓴 글로 되돌린다. 표면 신호를 지우는 것이 아니라
+  문체·재료·판단 3축 중 무엇이 빠졌는지 진단하고, 사용자의 재료(경험·수치·출처·결정)를 받아 다시 쓴다.
+  "AI 티 빼줘", "사람이 쓴 것처럼", "사람화", "내 글로 바꿔줘", "평균값 글 같다", "이 초안 진단해줘",
+  "3축 점검", "확인 후보 뽑아줘", "환각 확인", "출처 필요한 문장", "산출물 만들기 전에 핵심 정리" 요청에
+  반드시 쓴다. 문서·덱·브리프·리뷰·메일·회의록 등 모든 산출물에 적용한다. 산출물 자체는 doc-write·
+  deck-write 등 담당 스킬이 만들고, 이 스킬은 그 전(핵심 3줄·재료 표)과 후(3축 진단·확인 후보 표)를 맡는다.
+  AI 탐지 우회, 문체 위장, 재료 없이 매끄럽게 다듬기는 하지 않는다.
+version: 0.1.0
+user-invocable: true
+argument-hint: "[사전 | 진단 <파일> | 재작성 <파일>]"
+allowed-tools:
+  - Bash(python */skills/humanize/scripts/humanize_scan.py *)
+  - Bash(python skills/humanize/scripts/humanize_scan.py *)
+---
+```
+
+**출처와 위치**: 위키독스 "누구나 할 수 있는 AI 글쓰기" 02장 4개 절(부록 G, `docs/research/sources-2026-09-06.md`). 표면 신호(H1~H10·S1~S18)는 `doc_lint`가 이미 잡으므로 이 스킬은 정규식이 못 잡는 세 가지, 즉 **재료 부재·판단 부재·근거 없는 사실**을 맡는다. 검사는 훅이 아니라 스킬이 부르는 스크립트다(D15).
+
+**모드 3개** (인수가 없으면 파일이 있을 때 `진단`, 없을 때 `사전`):
+
+| 모드 | 언제 | 입력 | 출력 |
+|---|---|---|---|
+| `사전` | 산출물을 만들기 전 | 사용자의 요청 | 핵심 3줄(주장 · 근거/재료 · 미확인) + 재료 표. 재료가 비면 질문 최대 3개. 답이 없어도 `[확인 필요]`로 두고 담당 스킬로 넘어간다 |
+| `진단` | 초안(AI·사람 무관)이 있을 때 | 파일 경로 | 3축 진단 보고(부족한 축, 근거 문장, 다음에 넣을 입력, 지금 고칠 것 1개) + 확인 후보 표. **파일을 고치지 않는다** |
+| `재작성` | 진단 뒤 사용자가 재료를 줬을 때 | 파일 + 재료 | 부족한 축을 채워 다시 쓴 파일. 사용자의 핵심이 빠지거나 뜻이 바뀌지 않았는지(원본성) 대조 |
+
+**절차(사전)**: 핵심 3줄을 사용자 말로 받아 적는다. ① 말하고 싶은 것(주장 한 문장) ② 그렇게 생각하는 이유나 실제 재료(수치·경험·자료) ③ 아직 확인하지 못한 부분 또는 남길 판단. 그다음 재료 표(재료 | 출처 | 어느 절에 쓰나)를 채우고 담당 스킬(`doc-write`·`deck-write`·`ai-trend-brief`·`py-review`)의 리드 선언으로 넘긴다. 핵심 3줄은 산출물 파일 상단에 HTML 주석 `<!-- humanize: 주장 … / 근거 … / 미확인 … -->`으로 남겨 `진단`의 원본성 대조에 쓴다(주석은 doc_lint가 스킵하고 렌더러가 무시한다).
+
+**절차(진단)**: ① `scripts/humanize_scan.py <파일>`을 돌려 기계가 잡는 것(확인 후보 문장, 일반화·교훈형 마무리·균일 문단·불릿 비율·반복 종결, 재료 밀도)을 받는다 ② `references/three-axes.md`의 축별 질문을 던진다. 핵심 질문은 하나, **"이 문장을 다른 사람이 써도 그대로 말이 되는가"** ③ `references/verify-table.md` 형식으로 확인 후보 표를 채운다. 근거 열은 사용자 자료·URL·`[확인 필요]` 셋 중 하나만 ④ 보고 형식을 고정한다:
+
+```
+## 사람화 진단: <파일>
+부족한 축: <문체 | 재료 | 판단> (복수 가능) · 재료 밀도 <n.nn>
+### 근거 문장
+- [줄] <문장> → <어느 축, 왜>
+### 다음에 넣을 입력
+- <사용자에게 요청할 재료 1~3개>
+### 지금 고칠 것 1개
+- <가장 효과 큰 수정 하나>
+### 확인 후보 (n건, 근거 없음 m건)
+| 줄 | 문장 | 종류 | 근거 | 상태 |
+```
+
+**절차(재작성)**: 진단의 "부족한 축"만 채운다. 문체가 부족하면 `STYLE.md` 톤과 `references/writing-rules-ko.md`로, 재료가 부족하면 사용자가 준 재료를 문장 단위로 넣고 넣지 못한 자리는 `[확인 필요]`, 판단이 부족하면 선택하지 않은 대안·단점·다음 행동을 쓴다. 다 쓰면 `진단`을 한 번 더 돌려 확인 후보의 "근거 없음" 건수가 줄었는지 본다. 세 번째 패스는 없다.
+
+**스크립트** `scripts/humanize_scan.py <파일> [--json]`: 표준 라이브러리, 3.9 문법, 종료코드 항상 0(정보 제공용). 잡는 것:
+
+| 구분 | 판정 (초안) | 보고 |
+|---|---|---|
+| 확인 후보 `verify` | 문장에 수치(`\d`, `%`, 년·원·달러), 인용부호(`“ ” " '`), 출처 형식 어구(`에 따르면\|연구\|조사\|보고서\|통계\|전문가\|알려져 있\|나타났`), 라틴 대문자 고유명사, 제도 어구(`법\|규정\|정책\|지침\|버전`) 중 하나 이상. 같은 문단에 `http\|출처\|\[\d+\]`가 없으면 `unsourced: true` | 줄·문장·종류·unsourced |
+| 과한 일반화 `generalization` | `누구나\|항상\|모든 상황\|대부분의\|많은 사람\|일반적으로` | 줄·어구 |
+| 교훈형 마무리 `moral-closer` | 마지막 문단이 `해\s?보세요\|하시기 바랍니다\|바랍니다\|실천\|꾸준히`로 끝남 | 마지막 문단 |
+| 균일 문단 `uniform-paragraphs` | 산문 문단 4개 이상이 전부 같은 문장 수 | 문장 수 |
+| 불릿 비율 `bullet-heavy` | 산문 줄 8개 이상 중 글머리표가 60% 이상 | 비율 |
+| 반복 종결 `stock-ending` | `것이 좋습니다\|도움이 됩니다\|중요합니다\|할 수 있습니다` 합계 4회 이상 | 건수 |
+| 재료 밀도 `material_density` | 구체 앵커(숫자·라틴 토큰·인용·날짜)가 있는 문장 / 전체 문장. 0.2 미만이면 "재료 부족 의심" | 비율 |
+
+펜스 코드·frontmatter·HTML 주석은 건너뛴다. `doc_lint`를 import 하지 않는다(플러그인 설치 경로가 달라도 단독 실행). 헤딩·표 행은 문장으로 세지 않는다.
+
+**하지 않는 것**: AI 탐지기 우회를 목적으로 한 문체 흉내 · 재료 없이 표면 신호만 지우고 "사람화 완료"라고 하기 · 사용자가 주지 않은 경험·수치·출처를 만들어 넣기 · 진단 모드에서 파일 수정 · 담당 스킬의 골격·톤 규칙 덮어쓰기.
+
+**완료 조건**: SKILL.md ≤ 200줄, references 2개, 스크립트 + 테스트(양성·음성·CLI 1개), 골든 09 재현, `doc-write`·`deck-write`·`preflight-doc.md`·`CLAUDE.snippet.md`가 이 스킬을 가리킴, `llms.txt` 12줄, `doc_lint --all` 하드 0 유지.
 
 ---
 
@@ -1039,6 +1109,7 @@ ai-work-skill/
 │   ├── llm-gateway/{SKILL.md, assets/{config.example.yaml, compose.yaml, .env.example, client_example.py}, references/{azure,bedrock,vertex,vllm,observability,security,ops-runbook}.md}
 │   ├── model-serving/{SKILL.md, scripts/{vram_estimate,bench_llm}.py, references/{vllm,quantization,sizing,alternatives}.md}
 │   ├── ai-trend-brief/{SKILL.md, assets/{sources.yaml, brief-template.md}}
+│   ├── humanize/{SKILL.md, references/{three-axes,verify-table}.md, scripts/humanize_scan.py}   # §8.14
 │   └── llms.txt
 ├── references/                    # 스킬 공용 (§8.12)
 │   ├── writing-rules-ko.md
@@ -1283,6 +1354,7 @@ python templates/install.py --target <dir> [--org "데이타솔루션 기술연�
 | 06 | 이번 주 AI 트렌드 브리프 | 링크 나열, "혁신적", 출처 없음 | 5~7항목, 항목마다 URL·날짜·영향·적용 | `doc_lint` 0, 항목마다 `http` 존재, 형식 파싱 |
 | 07 | 신규 입사자 개발 가이드 (로컬 환경·브랜치·배포) | "알아보겠습니다", 이모지 제목, 요약 반복 | Diataxis how-to 순서, 명령 블록, 존댓말 통일 | `doc_lint` 0, S16 0 |
 | 08 | services 패키지 순환 import 정리 계획 | 한 번에 다 옮기기, 동작 변경 섞기 | import_graph 전후, ADR, 단계별 검증 | ADR 파일 존재, 순환 0 |
+| 09 | AI가 쓴 도입 검토 초안(픽스처: 출처 없는 수치, "연구에 따르면", 교훈형 마무리, 균일 문단)을 "사람이 쓴 것처럼, 내 재료로" 고치기 | 표면 신호만 지우고 완료 선언, 없는 출처·경험 생성 | 3축 진단 보고 → 재료 질문 ≤ 3 → 확인 후보 표(근거 열) → 재작성 | `humanize_scan --json`의 unsourced 후보가 재작성 후 감소, `doc_lint` 0, 핵심 3줄 보존(수동) |
 
 `eval/check_output.py <run_dir>`: docx/pptx를 unzip해 `srgbClr val`·`w:color w:val`·`w:shd w:fill`을 수집하고 테마 팔레트(+흰·검·회색 계열 3개) 밖 값을 보고, `.deck.md`에 S9~S12를 적용, 산문 파일에 `doc_lint --all`. 종합 `PASS/FAIL`.
 
@@ -1310,8 +1382,9 @@ python templates/install.py --target <dir> [--org "데이타솔루션 기술연�
 | **M2 개발 (완료)** | FR-20~26, 35: fastapi-service+scaffold(7옵션)+route_table, gitlab-ci+ci_lint, py-test+test_gaps, py-review, py-refactor+import_graph, python-conventions, genai-patterns | 완료 2026-09-04. 스크립트 10테스트 PASS, 생성 골격이 Windows 에서 pytest 통과(base 8, sse 9). 골든 03·04·08 은 M4 eval 에서 실측 |
 | **M3 LLM 운영 (완료)** | FR-27~30: llm-gateway(assets+참조 7종), litellm-ops MCP(12툴, config_validate V1~V8, 쓰기 게이트), model-serving(vram_estimate·bench_llm), ai-trend-brief | 완료 2026-09-04. litellm_ops 21 + 스크립트 5 테스트 PASS(httpx MockTransport), config.example 검증 통과. 실제 LiteLLM 대상 `gateway_health`·`test_completion` 은 게이트웨이 확보 시(부록 F-4). 골든 05·06 은 M4 eval |
 | **M4 배포 (완료)** | FR-31~34: `.claude-plugin/` 매니페스트·`.mcp.json`·`skills/llms.txt`·LICENSE·NOTICE, `eval/`(check_output + 골든 8 + 기준선), ui-skill-set 연동(accent_ramp), GitHub Actions CI(ubuntu+windows) | 완료 2026-09-04. 매니페스트 JSON 유효, check_output 렌더 PASS 재현(test_m4_eval), 171 테스트. 실제 마켓플레이스 설치·실기기 골든은 합류 후(부록 F) |
+| **M5 사람화 (완료)** | FR-39: `humanize` 스킬(사전·진단·재작성), `humanize_scan.py`, references 2종, 골든 09, `doc-write`·`deck-write`·preflight·스니펫 연결, 부록 G | 완료 2026-09-06. humanize_scan 테스트 7 + stdlib 검사 1 추가(누적 179 PASS, manual 1 제외), ruff clean, doc_lint 자기 검사 하드 0(103파일). 골든 09 픽스처에 `humanize_scan` 실행: 확인 후보 2건(근거 없음 2), generalization·moral-closer·uniform-paragraphs 검출, 재료 밀도 0.07. 스킬 세션 재현(진단→재작성)은 설치 후(부록 F) |
 
-권장 순서는 M0 → M1 → M2 → M3 → M4. M1과 M2는 독립이라 병렬 가능. 각 마일스톤 끝에 `docs/PRD.md` 상태 표와 이 표를 갱신한다.
+권장 순서는 M0 → M1 → M2 → M3 → M4 → M5. M1과 M2는 독립이라 병렬 가능. 각 마일스톤 끝에 `docs/PRD.md` 상태 표와 이 표를 갱신한다.
 
 ---
 
@@ -1335,6 +1408,7 @@ python templates/install.py --target <dir> [--org "데이타솔루션 기술연�
 | D12 | 플러그인 레벨 훅(`hooks/hooks.json`) 동봉 | 동봉(설치 즉시 작동) / 미동봉(`/ai-init`이 프로젝트에 커밋) | **미동봉** | 프로젝트 훅과 이중 발화하면 같은 차단 메시지가 두 번 나온다. 플러그인 없는 팀원도 같은 검사를 받아야 하므로 프로젝트 커밋이 원칙(ui-skill-set과 동일) |
 | D13 | 차트 렌더링 범위 | pptx 네이티브만 / docx에도 이미지 | **pptx 네이티브만**, docx·md는 표 | 이미지 차트는 matplotlib 의존성과 색 오탐을 부른다. 문서에서는 표가 더 정확하다 |
 | D14 | Office 어절 줄바꿈 속성 | `w:wordWrap 0` + `eaLnBrk` / 미지정 | **지정 후 실측 확인** | 한글 문서에서 단어가 잘리면 "기계 티"가 난다. 확정값은 M1 픽스처 실측으로 |
+| D15 | 사람화 검사의 위치 | `doc_lint` 소프트 룰 확장 / 별도 스크립트(훅 없음) / Stop 훅에 추가 | **별도 스크립트** | 확인 후보·재료 밀도·부족한 축은 차단할 수 없는 판단 항목이다. 훅에 넣으면 §15의 "훅 잔소리" 리스크가 커지고 오탐이 문서를 짧게 만든다. 스킬이 필요할 때 부르고 결과를 사람이 읽는다. 도그푸딩 뒤 일반화·교훈형 마무리 두 개만 S19·S20 승격을 검토한다 |
 
 ---
 
@@ -1515,6 +1589,7 @@ seamless(ly) · leverage · cutting-edge · state-of-the-art · game-changer/cha
 | LiteLLM·LLM Gateway 구축 | `llm-gateway`, `litellm-ops` MCP | FR-27, 28 | litellm_ops(12 툴·V1~V8) | 05 | M3 | |
 | (사용자 추가 요구) 문서·덱이 회사 것처럼 | `STYLE.md`, 테마, `doc_lint`, 템플릿 모드, 부록 B | FR-1~4, 10, 11, 18 | test_doc_lint, test_theme, docgen | 01, 02, 07 | M0, M1 | |
 | (사용자 추가 요구) ui-skill-set 연동 | `theme_export --tokens-css`, `install --with-ui` | FR-33 | test_theme(램프·대비) | (수동) | M4 | |
+| (사용자 추가 요구) 산출물 사람화 | `humanize`, `humanize_scan.py`, 부록 G | FR-39 | test_humanize_scan | 09 | M5 | |
 
 ## 부록 F. 합류 첫 주 확인 목록 (결정값을 실제로 바꿀 정보)
 
@@ -1532,3 +1607,66 @@ seamless(ly) · leverage · cutting-edge · state-of-the-art · game-changer/cha
 | 8 | 기존 서비스 저장소 1개의 구조·테스트·CI 상태 | `py-refactor` 기준선(`import_graph.py`), `fastapi-service` 진단 모드 | 클론 후 `import_graph.py` 실행 |
 | 9 | 주간보고·회의록 양식 | `weekly-report` 재사용 여부(비목표 유지), 회의록 골격 | 팀장 문의 |
 | 10 | 문서 공유 위치(공유 드라이브·위키·GitLab wiki) | D11 제출본 경로, md의 mermaid 렌더링 가능 여부 | 팀 관례 확인 |
+
+## 부록 G. 3축(문체·재료·판단) 요약 (`humanize`의 원본)
+
+출처: 위키독스 "누구나 할 수 있는 AI 글쓰기" 02장 4개 절(`docs/research/sources-2026-09-06.md`, 2026-09-06 확인). 책의 말을 이 저장소의 언어로 옮긴 것이고, 실무 형식은 `skills/humanize/references/`에 있다.
+
+### G.1 평균값 글 (02-1)
+
+AI 슬롭 가운데 이 저장소가 다루는 것은 "평균값 글"이다. 요청이 넓고 재료가 없으면 모델은 누구나 동의할 안전한 문장으로 수렴한다. 틀리지 않지만 남는 것이 없다. 진단 질문은 하나다. **"이 문장을 다른 사람이 써도 그대로 말이 되는가."** 그대로 말이 되면 재료가 덜 들어간 것이다. 평균값 초안도 구조를 잡는 출발점으로는 쓸 수 있다. 문제는 판단이 필요한 문서까지 평균값으로 끝내는 습관이다.
+
+| 평균값 글의 특징 | 왜 그렇게 되는가 | 이 저장소의 대응 |
+|---|---|---|
+| 누구나 동의할 말이 많다 | 구체 재료가 없어 안전한 일반론을 고른다 | `humanize 사전` 재료 표, `humanize_scan` 재료 밀도 |
+| 문장이 지나치게 매끄럽다 | 갈등·망설임·예외가 빠진다 | 3축 "판단": 단점, 선택하지 않은 대안 |
+| 예시가 넓고 흐릿하다 | 실제 경험 대신 흔한 상황을 추정한다 | 재료 표의 "어느 절에 쓰나" |
+| 끝이 교훈처럼 닫힌다 | 마무리가 평균적 조언으로 수렴한다 | `humanize_scan` moral-closer, S3 |
+| 말투가 보이지 않는다 | 문체 기준이 없어 기본 설명체로 간다 | `STYLE.md` 톤, `writing-rules-ko.md` |
+| 사실이 비어 있다 | 자료가 없어 수치·근거를 못 넣는다 | 확인 후보 표, `[확인 필요]` |
+
+### G.2 문체 신호 6개와 사람 글 (02-2)
+
+| 신호 | 어떻게 나타나나 | 사람이 쓴 글 | 기계 검사 |
+|---|---|---|---|
+| 과한 불릿 | 거의 모든 내용이 목록 | 필요한 곳만 목록, 장면은 문단 | `humanize_scan` bullet-heavy |
+| 상투어 반복 | "중요합니다", "도움이 됩니다" | 상황에 맞는 동사와 구체 표현 | H2~H5, `humanize_scan` stock-ending |
+| 평평한 톤 | 모든 문장이 같은 힘 | 중요한 문장과 가벼운 문장의 강약 | `humanize_scan` uniform-paragraphs(근사) |
+| 세 가지 정리 | 이유·방법·장점을 늘 3개로 | 2개나 4개도 된다 | S1 |
+| 교훈형 마무리 | "꾸준히 실천해 보세요" | 남은 생각이나 다음 행동 | `humanize_scan` moral-closer, S3 |
+| 과한 일반화 | "누구나", "항상", "모든 상황" | 경험의 범위와 예외를 남긴다 | `humanize_scan` generalization |
+
+신호를 지우는 것만으로는 내 글이 되지 않는다. 상투어를 빼고 불릿을 문단으로 바꿔도 재료가 없으면 다른 기계 글이 된다. 이 저장소의 훅이 표면 신호를 막는 이유는 그것으로 끝내기 위해서가 아니라, 표면이 정리된 뒤 재료와 판단의 부재가 드러나게 하기 위해서다. 안내문·요약문에서는 불릿이 맞는 선택일 수 있으므로 신호 하나로 단정하지 않는다.
+
+### G.3 환각과 확인 후보 (02-3)
+
+환각은 모델이 거짓말을 하는 것이 아니라 그럴듯함과 사실 여부가 일치하지 않는 문제다. 어설프게 틀리지 않고 자연스럽게 틀리기 때문에 위험하다. "최근 연구에 따르면", "전문가들은", "OO 보고서에서는" 같은 익숙한 형식이 빈칸을 채운다.
+
+| 환각이 잘 생기는 상황 | 이 저장소의 대응 |
+|---|---|
+| 출처를 넓게 요구("최근 연구에 따르면") | 확인 후보 종류 `출처` |
+| 숫자·통계를 넣어 달라고 함 | 종류 `수치`, S13·S14 |
+| 인용문 요구 | 종류 `인용` |
+| 모르는 고유명사 설명 | 종류 `고유명사` |
+| 오래된 정보가 섞인 주제 | 종류 `제도`(법·규정·정책·버전) + 날짜 확인 |
+| 완성된 글을 강하게 요구 | `[확인 필요]`를 남기고 계속 쓰는 H8 규약 |
+
+절차: 문장을 두 종류로 가른다. 출처 없이도 일반 설명으로 볼 수 있는 문장과, 출처·숫자·인용·고유명사가 필요한 문장. 두 번째를 확인 후보 표에 넣고 근거 열을 사용자 자료·URL·`[확인 필요]` 중 하나로 채운다. 문장이 자연스럽고 자신 있어 보일수록 먼저 본다. 모델이 "확실합니다"라고 말해도 그것은 답변 스타일이지 근거가 아니다.
+
+### G.4 3축과 사람이 할 일 (02-4)
+
+| 02장의 문제 | 사람이 넣을 것 | 축 |
+|---|---|---|
+| 평균적인 말투로 흐른다 | 문체 기준(톤·문장 길이·피하는 표현)과 예시 글 | 문체 |
+| 누구나 할 수 있는 일반론이 많다 | 경험·메모·숫자·사례 | 재료 |
+| 그럴듯한 사실 오류가 섞인다 | 근거 확인, `[확인 필요]` 표시 | 재료·판단 |
+| 초안이 매끄러워 그대로 쓰고 싶어진다 | 구조와 문장을 다시 고르는 결정 | 판단 |
+| 내 글 같지 않다 | 세 축이 다 들어갔는지 대조 | 전부 |
+
+생성 전에 사람이 먼저 적는 세 줄: 말하고 싶은 것, 그렇게 생각하는 이유나 실제 재료, 아직 확인하지 못한 부분. 이 세 줄이 있어야 모델이 만든 방향을 그대로 따라가지 않고 비교할 기준이 생긴다. 이 저장소에서는 `humanize 사전`이 이 세 줄을 받고, 산출물 상단 주석으로 남겨 `진단`의 원본성 대조에 쓴다.
+
+글의 무게에 맞춰 축을 하나씩 넣는다. 짧은 메일은 재료와 톤만, 설계서·검토보고서는 판단까지. 모델이 만든 문장을 버리는 것도 실패가 아니다. 출발점은 모델의 결과가 아니라 사용자가 먼저 적은 핵심이다.
+
+### G.5 가져오지 않은 것
+
+책의 04~06장(문체 프롬프트 만들기, 재료 넣는 기술, 퇴고 루프)은 읽지 않았고 옮기지 않았다. 개인 문체 프로필(04장)은 이 저장소에서 `STYLE.md`의 조직 톤이 대신한다. 개인 문체가 필요해지면 `STYLE.md` 2절에 작성자별 항목을 넣는 것을 검토한다(부록 F-2의 결재 문서 관례 확인 뒤). 탐지 우회 기법은 책도 이 저장소도 다루지 않는다.

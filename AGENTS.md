@@ -29,6 +29,7 @@
 | `llm-gateway` | LiteLLM 게이트웨이 설계·운영 |
 | `model-serving` | vLLM 서빙·VRAM 산정·벤치 |
 | `ai-trend-brief` | AI 트렌드 조사 브리프 |
+| `humanize` | AI 초안의 3축(문체·재료·판단) 진단·확인 후보·재작성 |
 
 각 스킬의 상세는 `skills/<이름>/SKILL.md` 와 그 `references/` 에 있다. 트리거 어휘는 `skills/llms.txt` 에 한 줄씩 있다.
 
