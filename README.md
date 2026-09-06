@@ -6,7 +6,7 @@ FastAPI 서비스 골격, GitLab CI/CD, 코드 리뷰·테스트·리팩토링, 
 
 - 설계 문서: [docs/PRD.md](docs/PRD.md) · 구현 규약: [CLAUDE.md](CLAUDE.md) · 골든 재현 결과: [eval/results.md](eval/results.md) · 외부 사실 출처: [docs/research/sources-2026-09-04.md](docs/research/sources-2026-09-04.md)
 - 합류 첫 주 확인 목록(공식 템플릿·GitLab 버전·게이트웨이 등 실환경 값): [PRD 부록 F](docs/PRD.md#부록-f-합류-첫-주-확인-목록-결정값을-실제로-바꿀-정보)
-- 상태: **완성** (2026-09-04, M5 사람화 2026-09-06). M0~M5 전체 구현. 스킬 12개 + MCP 서버 2개(docgen·litellm-ops) + 훅 2개. 검증: `uv run pytest` 179 PASS(+manual 1), `ruff check`·`format --check` clean, `doc_lint --all` 하드 위반 0(103파일). 생성 FastAPI 골격이 그대로 `uv run pytest` 통과, `config.example.yaml` 이 `config_validate` 통과, 설계서 docx·덱 pptx 가 실제 렌더되고 `check_output` PASS. 골든 프롬프트 8개 재현 결과는 [eval/results.md](eval/results.md) 를 본다(09 사람화는 스킬 세션에서 재현). 선행 자산: `../ui-skill-set`(구조·훅 원형), `../품의서/.claude/skills/review-report-writer`(문체 규칙 원형), 위키독스 "누구나 할 수 있는 AI 글쓰기" 02장(3축 개념, [docs/research/sources-2026-09-06.md](docs/research/sources-2026-09-06.md)).
+- 상태: **v0.2.0** (2026-09-04, M5 사람화·archify 연동 2026-09-06). M0~M5 전체 구현. 스킬 12개 + MCP 서버 2개(docgen·litellm-ops) + 훅 2개 + 외부 다이어그램 스킬(archify, `--with-archify`). 검증: `uv run pytest` 180 PASS(+manual 1), `ruff check`·`format --check` clean, `doc_lint --all` 하드 위반 0(104파일). 생성 FastAPI 골격이 그대로 `uv run pytest` 통과, `config.example.yaml` 이 `config_validate` 통과, 설계서 docx·덱 pptx 가 실제 렌더되고 `check_output` PASS, archify 한국어 예제가 validate·deliver·visual-check 통과. 골든 프롬프트 8개 재현 결과는 [eval/results.md](eval/results.md) 를 본다(09 사람화·10 archify 는 스킬 세션에서 재현). 선행 자산: `../ui-skill-set`(구조·훅 원형), `../품의서/.claude/skills/review-report-writer`(문체 규칙 원형), 위키독스 "누구나 할 수 있는 AI 글쓰기" 02장(3축 개념, [docs/research/sources-2026-09-06.md](docs/research/sources-2026-09-06.md)).
 
 ## 구성
 
