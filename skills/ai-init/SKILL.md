@@ -3,11 +3,12 @@ name: ai-init
 description: >
   ai-work-skill 을 현재 프로젝트에 설치한다. STYLE.md(문서 계약)·doc_lint 훅·py_format 훅·CLAUDE 규약·docs 골격·
   GitLab MCP 항목을 넣는다. "프로젝트 세팅", "문서 규약 설치", "스타일 가이드 설치", "ai-work-skill 설치",
-  신규 저장소 온보딩, 기존 설치 갱신(--update), 프론트엔드가 있는 프로젝트의 UI 규약 동시 설치(--with-ui)에 쓴다.
+  신규 저장소 온보딩, 기존 설치 갱신(--update), 프론트엔드가 있는 프로젝트의 UI 규약 동시 설치(--with-ui),
+  독립 HTML 아키텍처 다이어그램 스킬 archify 동시 설치(--with-archify)에 쓴다.
   문서나 코드를 직접 만들지는 않는다.
 version: 0.1.0
 user-invocable: true
-argument-hint: "[--update | --with-ui | --logo <경로> | --no-python]"
+argument-hint: "[--update | --with-ui | --with-archify | --logo <경로> | --no-python]"
 allowed-tools:
   - Bash(python */templates/install.py *)
   - Bash(python .claude/hooks/doc_lint.py *)
@@ -39,6 +40,7 @@ allowed-tools:
    ```bash
    python templates/install.py --target . --org "데이타솔루션 기술연구소" --tone 서술식
    ```
+   아키텍처·시퀀스·데이터 흐름·상태 다이어그램을 독립 HTML 로 그리고 싶다고 하면 `--with-archify` 를 붙인다. Node 18 이상이 필요하고 사용자 전역(`~/.claude/skills/archify`)에 한 번만 설치된다. 언제 docgen 구성도 대신 archify 를 쓰는지는 플러그인 루트 `references/diagram-tools.md` 에 있다.
    회사 템플릿 경로를 받았으면 `--template-pptx`·`--template-docx` 로 넘긴다. 이어서 `python -m docgen theme-from-pptx <경로> --name company --out-dir docs` 로 `docs/theme.json` 을 만든다(docgen 환경이 없으면 명령만 안내한다). 이 단계는 M1 에서 docgen 이 준비된 뒤 동작한다.
 4. 설치기 출력의 "다음 단계" 를 사람에게 전달하고, 확인 검사를 돌린다.
    ```bash
@@ -53,6 +55,7 @@ allowed-tools:
 - `STYLE.md`(문서 계약), `CLAUDE.md` 스니펫
 - `docs/{arch,adr,deck,trends,assets,_build}/`, `docs/glossary.md`, `.gitignore` 에 `docs/_build/`
 - `.mcp.json` 의 GitLab(공식, http) 항목
+- `--with-archify` 일 때 archify 스킬(사용자 전역 `~/.claude/skills/archify`, 프로젝트 파일 없음)
 
 ## 하지 않는 것
 

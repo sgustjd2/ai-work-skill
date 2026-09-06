@@ -40,6 +40,8 @@
 
 실행 명령은 stdio 다. 호스트별 등록은 [docs/hosts.md](docs/hosts.md).
 
+외부 스킬 archify(`tt-a1i/archify`, MIT)는 독립 HTML 다이어그램(아키텍처·워크플로·시퀀스·데이터 흐름·상태)을 만든다. 저장소에 넣지 않고 `npx skills add tt-a1i/archify -g` 로 호스트 전역에 설치하며, 언제 docgen 대신 쓰는지는 `references/diagram-tools.md` 에 있다.
+
 ## 규칙
 
 - 문서·덱은 `.doc.md`/`.deck.md` 로 쓰고 `docgen` 으로 렌더링한다. python-docx/pptx 를 직접 부르지 않는다.

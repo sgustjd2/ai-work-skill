@@ -78,3 +78,4 @@
 - 폴백·비동기 경로는 `style: dashed` 로 구분한다.
 - 노드가 20개를 넘거나 그룹이 6개를 넘으면 렌더러가 경고한다. 그럴 때는 수준을 나눈다.
 - 현행 구성이 `compose.yaml` 로 있으면 `diagram_from_compose` 로 초안을 만들고 손본다.
+- 시퀀스·데이터 흐름·상태 다이어그램과 문서 밖 공유용 HTML 은 DSL 대상이 아니다. 플러그인 루트 `references/diagram-tools.md`(archify)를 본다.

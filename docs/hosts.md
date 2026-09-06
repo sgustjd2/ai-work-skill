@@ -10,6 +10,7 @@
 | 스크립트 | `scaffold`·`import_graph`·`test_gaps`·`ci_lint`·`vram_estimate`·`bench_llm`·`humanize_scan`·`doc_lint`·`py_format` | 표준 라이브러리 CLI. 셸에서 바로 실행 |
 | 스킬 문서 | `skills/*/SKILL.md` 와 `references/` | 마크다운. 호스트가 지시로 읽는다 |
 | 편집 훅 | `doc_lint --pre/--stop`, `py_format --post` | 호스트별. Claude 는 settings.json, 나머지는 pre-commit·CI 로 |
+| 외부 스킬 | archify(독립 HTML 다이어그램, Node 18+) | `npx skills add tt-a1i/archify -g` 가 Claude(`~/.claude/skills`)·Codex(`~/.agents/skills`)·opencode 에 설치. 규칙은 `references/diagram-tools.md`. 2026-09-06 Claude 경로에서 설치·doctor·한국어 예제 렌더 확인 |
 
 정리하면 MCP 툴과 CLI 는 어디서나 같고, 스킬은 이식 가능한 텍스트다. 호스트에 묶이는 것은 편집 직전 자동 차단(훅)뿐이고, 그 검사도 CI 로 대체할 수 있다.
 

@@ -15,7 +15,7 @@ FastAPI 서비스 골격, GitLab CI/CD, 코드 리뷰·테스트·리팩토링, 
 | 에셋 | `templates/STYLE.md`(문서 계약), `themes/datasolution.json`(팔레트·폰트·치수), `skills/fastapi-service/assets/`(예제 서비스), `skills/llm-gateway/assets/config.example.yaml` |
 | 룰 | 스킬 12개: `ai-init` `doc-write` `deck-write` `fastapi-service` `gitlab-ci` `py-review` `py-test` `py-refactor` `llm-gateway` `model-serving` `ai-trend-brief` `humanize` |
 | 하네스 | `templates/doc_lint.py`(편집 전 AI 문체 차단·종료 전 점검), `templates/py_format.py`(편집 후 ruff) |
-| 도구 | MCP `docgen`(md → docx/pptx, 구성도·차트, 미리보기, 양식 추출), `litellm-ops`(게이트웨이 상태·비용·키·config 검증 12툴), GitLab 공식 MCP(설정만) |
+| 도구 | MCP `docgen`(md → docx/pptx, 구성도·차트, 미리보기, 양식 추출), `litellm-ops`(게이트웨이 상태·비용·키·config 검증 12툴), GitLab 공식 MCP(설정만), archify(외부 스킬, 독립 HTML 다이어그램, `/ai-init --with-archify` 로 전역 설치, 규칙은 `references/diagram-tools.md`) |
 
 ## 설치
 
@@ -25,7 +25,7 @@ FastAPI 서비스 골격, GitLab CI/CD, 코드 리뷰·테스트·리팩토링, 
 claude plugin marketplace add sgustjd2/ai-work-skill
 ```
 
-그다음 `/plugin install ai-work-skill@ai-work-skill`. MCP 서버(`docgen`·`litellm-ops`)는 `uv` 가 필요하다. 프로젝트에 훅·`STYLE.md`·규약을 넣으려면 `/ai-init` 을 실행한다(문서 스킬은 `STYLE.md` 가 있어야 동작한다).
+그다음 `/plugin install ai-work-skill@ai-work-skill`. MCP 서버(`docgen`·`litellm-ops`)는 `uv` 가 필요하다. 프로젝트에 훅·`STYLE.md`·규약을 넣으려면 `/ai-init` 을 실행한다(문서 스킬은 `STYLE.md` 가 있어야 동작한다). 시퀀스·데이터 흐름·상태 다이어그램이나 공유용 HTML 구성도가 필요하면 `/ai-init --with-archify` 로 [archify](https://github.com/tt-a1i/archify)(MIT, Node 18+)를 사용자 전역에 설치한다. 본문 구성도는 여전히 docgen 이 회사 테마로 그린다.
 
 ## 사용 예시
 
@@ -41,6 +41,7 @@ claude plugin marketplace add sgustjd2/ai-work-skill
 | 게이트웨이 설정 | "Azure 두 리전에 Bedrock 폴백으로 litellm config 만들어줘" | 검증을 통과하는 `config.yaml` |
 | 트렌드 | "이번 주 AI 트렌드 브리프" | `docs/trends/YYYY-Www.md`(항목마다 출처·영향·적용) |
 | AI 초안 사람화 | "이 초안 AI 티 나는데 내 재료로 고쳐줘" | 3축(문체·재료·판단) 진단 보고와 확인 후보 표, 재료를 받은 뒤 재작성 |
+| 독립 다이어그램 | "게이트웨이 호출 시퀀스를 HTML 로 그려줘" | archify JSON(`docs/diagrams/`) → 검증된 독립 HTML(`docs/_build/diagrams/`), 필요하면 PNG 로 문서 첨부 |
 
 ### 문서 한 편을 끝까지
 
@@ -71,6 +72,10 @@ uv run python skills/model-serving/scripts/vram_estimate.py --params 32 --dtype 
 
 # 초안의 확인 후보(수치·출처·인용·고유명사·제도)·평균값 신호·재료 밀도
 uv run python skills/humanize/scripts/humanize_scan.py docs/arch/gateway.doc.md
+
+# 독립 다이어그램(archify, /ai-init --with-archify 로 설치한 뒤)
+node ~/.claude/skills/archify/bin/archify.mjs validate architecture docs/diagrams/gateway.architecture.json --quality showcase --json
+node ~/.claude/skills/archify/bin/archify.mjs deliver architecture docs/diagrams/gateway.architecture.json docs/_build/diagrams/gateway.html --quality showcase --json
 ```
 
 MCP 로 쓸 때는 `docgen` 이 문서·덱·구성도를, `litellm-ops` 가 게이트웨이 상태·비용·키·설정 검증을 툴로 노출한다. 키 발급·차단은 `LITELLM_OPS_ALLOW_WRITE=true` 일 때만 동작한다.

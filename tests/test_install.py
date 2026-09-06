@@ -34,6 +34,14 @@ def test_merge_settings_preserve_and_dedup():
     assert len(pre) == 1
 
 
+def test_archify_install_cmd_and_home(tmp_path):
+    cmd = install.archify_install_cmd()
+    assert cmd[:4] == ["npx", "-y", "skills", "add"] and install.ARCHIFY_REPO in cmd
+    assert {"--global", "--yes", "--copy"} <= set(cmd)
+    assert cmd[cmd.index("--agent") + 1] == "claude-code"
+    assert install.archify_home(tmp_path) == tmp_path / ".claude" / "skills" / "archify"
+
+
 def test_merge_settings_no_python():
     out = install.merge_settings(None, "python", include_post=False)
     assert "PostToolUse" not in out and "py_format" not in out

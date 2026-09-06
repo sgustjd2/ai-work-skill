@@ -6,9 +6,9 @@ doc_lint: off
 
 | | |
 |---|---|
-| 버전 | 0.2 (초안, 구현 전). 0.1의 누락 점검 결과 반영: MCP 경로 해석(§9), H6 한국 문서 기호 예외·H9 자리표시자 예외·H10 렌더러 우회 차단(§7.1), S18 용어 통일(§7.2), GenAI 패턴·RAG·프롬프트 관리(§8.4, §8.12), 팀 예산 툴(§9.1), 차트 DSL·docx 템플릿 모드·결과물 위치(§10), 구현자용 `CLAUDE.md`(§11.9), 금지 표현 사전 전문(부록 B), 추적표(부록 E), 합류 첫 주 확인 목록(부록 F) · **0.3**(2026-09-06): `humanize` 스킬 추가(§8.14, FR-39, D15, 골든 09, 부록 G). 위키독스 "누구나 할 수 있는 AI 글쓰기" 02장의 3축(문체·재료·판단)을 흡수 |
+| 버전 | 0.2 (초안, 구현 전). 0.1의 누락 점검 결과 반영: MCP 경로 해석(§9), H6 한국 문서 기호 예외·H9 자리표시자 예외·H10 렌더러 우회 차단(§7.1), S18 용어 통일(§7.2), GenAI 패턴·RAG·프롬프트 관리(§8.4, §8.12), 팀 예산 툴(§9.1), 차트 DSL·docx 템플릿 모드·결과물 위치(§10), 구현자용 `CLAUDE.md`(§11.9), 금지 표현 사전 전문(부록 B), 추적표(부록 E), 합류 첫 주 확인 목록(부록 F) · **0.3**(2026-09-06): `humanize` 스킬 추가(§8.14, FR-39, D15, 골든 09, 부록 G). 위키독스 "누구나 할 수 있는 AI 글쓰기" 02장의 3축(문체·재료·판단)을 흡수 · archify 연동(§5.6, FR-40, D16) |
 | 작성일 | 2026-09-04 |
-| 진행 | **M0~M4 전체 완료**(2026-09-04). M0 골격·훅, M1 docgen(문서·덱), M2 개발 스킬, M3 LLM 운영, M4 배포(플러그인 매니페스트·.mcp.json·llms.txt·eval·CI·ui 연동). 스킬 11 + MCP 2(docgen·litellm-ops) + 훅 2. 171 테스트 PASS(+manual 1), ruff clean, 자기 검사 하드 0(97문서). 생성 FastAPI 골격 실제 pytest 통과, config.example 검증 통과, 설계서 docx·덱 pptx 실제 렌더 + check_output PASS · **M5 사람화 완료**(2026-09-06): `humanize` 스킬(3축 진단·확인 후보·핵심 3줄) + `humanize_scan.py` + 골든 09. 스킬 12 |
+| 진행 | **M0~M4 전체 완료**(2026-09-04). M0 골격·훅, M1 docgen(문서·덱), M2 개발 스킬, M3 LLM 운영, M4 배포(플러그인 매니페스트·.mcp.json·llms.txt·eval·CI·ui 연동). 스킬 11 + MCP 2(docgen·litellm-ops) + 훅 2. 171 테스트 PASS(+manual 1), ruff clean, 자기 검사 하드 0(97문서). 생성 FastAPI 골격 실제 pytest 통과, config.example 검증 통과, 설계서 docx·덱 pptx 실제 렌더 + check_output PASS · **M5 사람화 완료**(2026-09-06): `humanize` 스킬(3축 진단·확인 후보·핵심 3줄) + `humanize_scan.py` + 골든 09. 스킬 12 · **FR-40 archify 연동**(2026-09-06): `install.py --with-archify`, `references/diagram-tools.md`, 한국어 예제 validate·deliver·visual-check 실측 |
 | 작성 | Claude Fable 5.1 (PRD 전담) |
 | 구현 | Claude Opus 4.8. **이 문서만 보고** 코드를 만든다. 결정이 필요한 곳은 §14의 추천값으로 진행한다 |
 | 저장소 | `E:\workspace\ai-work-skill` (플러그인 이름 `ai-work-skill`, 배포 시 `sgustjd2/ai-work-skill`) |
@@ -91,6 +91,7 @@ ui-skill-set PRD §1.2의 결론이 문서와 코드에도 그대로 적용된�
 - 자체 LLM 게이트웨이 구현. LiteLLM을 쓴다. 자체 GitLab MCP 구현. 공식 MCP를 쓴다.
 - Kubernetes 매니페스트 생성기. 배포 대상은 참조 문서(§8.5 `deploy-targets.md`)로만 다룬다.
 - 프롬프트 평가 프레임워크 자체 구현. `py-test`의 골든 파일·`live_llm` 계약 테스트까지만 하고, 대규모 평가는 promptfoo 같은 외부 도구를 `references/genai-patterns.md`에서 안내한다.
+- 시퀀스·데이터 흐름·상태 다이어그램 렌더러 자체 구현과 archify 소스 벤더링. archify를 사용자 전역에 설치해 **호출**만 한다(§5.6).
 - 기존 docx·pptx의 서식 보존 편집(라운드트립). 기존 문서는 `docx_to_md`/`pptx_to_md`로 읽어 구조를 배우고 새로 렌더링한다. 회사 양식은 템플릿 모드(§10.5, §10.6)로 재사용한다.
 
 ---
@@ -206,6 +207,15 @@ MCP는 "모델이 직접 하면 틀리거나 위험한 결정적 작업"에만 �
 - `brand_hue: blue`로 설치하므로 AI-purple 룰(R2)이 그대로 산다.
 - ui-skill-set 경로는 `--ui-skill-set <경로>` 또는 환경변수 `UI_SKILL_SET_ROOT`, 둘 다 없으면 `../ui-skill-set`을 찾고, 없으면 건너뛰고 안내만 한다.
 
+### 5.6 archify 연동 (외부 다이어그램 스킬, 설치만)
+
+문서·덱 본문의 구성도는 docgen DSL(§10.3)이 회사 테마로 그린다. 그 밖의 다이어그램, 즉 문서 밖에서 열어 보고 공유·리뷰하는 독립 HTML과 docgen에 없는 유형(시퀀스·데이터 흐름·상태·워크플로)은 외부 스킬 archify(`tt-a1i/archify`, MIT, Node 18+, 런타임 의존성 0)를 쓴다. ui-skill-set과 같은 원칙으로 **호출만** 한다. 소스를 저장소에 넣지 않고 `/ai-init --with-archify`가 `npx skills add`로 사용자 전역(`~/.claude/skills/archify`)에 설치한다(§11.6 10-1). 언제 무엇을 쓰는지는 `references/diagram-tools.md`(§8.12)가 정하고 `doc-write`·`deck-write`·`arch-doc-types.md`·CLAUDE 스니펫이 그것을 가리킨다.
+
+- 흐름: JSON IR(`docs/diagrams/<이름>.<유형>.json`, 한국어) → `validate --quality showcase`(9항목) → `deliver`(SHA 영수증, `docs/_build/diagrams/<이름>.html`) → 문서에 넣을 때만 PNG(뷰어 Export 또는 `visual-check` 사이드카) → `docs/assets/diagrams/<이름>.png` → `.doc.md` 이미지 블록.
+- 회사 테마는 적용되지 않는다(archify 프리셋). 그래서 결재 문서의 TO-BE 구성도는 DSL이 원칙이고 archify는 보조·공유용이다(D16). `check_output`은 HTML·PNG를 검사하지 않는다.
+- 한국어 본문은 되지만 `meta.locale`은 en·zh-CN뿐이라 뷰어 UI는 영어로 남는다. 결과 보고에 한 줄 밝힌다.
+- 검증 상태(2026-09-06): v2.17.0-dev.1을 전역 설치해 `doctor` 13항목 ok, 한국어 게이트웨이 architecture 예제가 validate 9항목·deliver 통과(처음 두 라벨 겹침은 진단의 제안값으로 해결), `visual-check`(Chrome)는 세로로 긴 첫 배치에서 뷰포트 넘침으로 fail, 노드를 가로로 넓힌 배치(viewBox 폭 1130)에서 4개 뷰포트 모두 pass하고 PNG 4장(1440×900·2048×1320, 라이트·다크)을 남김. 예제와 검사는 골든 10. 출처는 `docs/research/sources-2026-09-06.md`.
+
 ---
 
 ## 6. 기능 요구사항
@@ -251,6 +261,7 @@ MCP는 "모델이 직접 하면 틀리거나 위험한 결정적 작업"에만 �
 | FR-37 | 저장소 루트 `CLAUDE.md`(구현자 규약, §11.9)와 `docs/research/`(사실 확인 출처). PRD 작성 시점에 이미 존재하며 Opus는 유지·갱신만 한다 | P0 | M0 |
 | FR-38 | 부록 E 추적표를 `docs/traceability.md`로 옮겨 마일스톤마다 "테스트·골든 결과" 열을 갱신 | P1 | M0~M4 |
 | FR-39 | `skills/humanize`(§8.14): SKILL.md(모드 3종 사전·진단·재작성) + `references/{three-axes,verify-table}.md` + `scripts/humanize_scan.py`(확인 후보·평균값 신호·재료 밀도, 표준 라이브러리, 종료 0) + 테스트. `doc-write`·`deck-write`·`preflight-doc.md`·`CLAUDE.snippet.md`가 이 스킬을 가리키고, `llms.txt` 12줄, 골든 09 | P0 | M5 |
+| FR-40 | archify 연동(§5.6): `install.py --with-archify`(npx skills 전역 설치·`doctor` 확인, 순수 함수 `archify_install_cmd`·`archify_home` + 테스트), `references/diagram-tools.md`(DSL 대 archify 선택 규칙·절차·PNG 첨부), `ai-init`·`doc-write`·`deck-write`·`arch-doc-types.md`·스니펫·hosts.md 연결 | P1 | M5 |
 
 ---
 
@@ -365,14 +376,14 @@ description: >
   문서나 코드를 직접 만들지는 않는다.
 version: 0.1.0
 user-invocable: true
-argument-hint: "[--update | --with-ui | --logo <경로> | --no-python]"
+argument-hint: "[--update | --with-ui | --with-archify | --logo <경로> | --no-python]"
 allowed-tools:
   - Bash(python */templates/install.py *)
   - Bash(python .claude/hooks/doc_lint.py *)
 ---
 ```
 
-절차: ① `STYLE.md`가 이미 있으면 `--update` 여부 확인, 없으면 신규. `--uninstall`이면 훅 파일·settings 항목·CLAUDE 스니펫만 제거하고 `STYLE.md`·`docs/`는 남긴다 ② 질문 최대 3개를 한 번에: 조직 표기(기본 `데이타솔루션`), 문서 톤(`서술식`(~다) 기본 / `경어`(~습니다)), 회사 공식 템플릿(pptx·docx) 파일이 있는지(있으면 경로). Python 프로젝트 여부는 `pyproject.toml` 존재로 자동 판단 ③ `install.py` 실행(§11.6 계약). 템플릿 경로를 받았으면 이어서 `python -m docgen theme-from-pptx <경로> --name company --out-dir docs`를 실행해 `docs/theme.json`을 만들고 `STYLE.md`의 `theme`·`template_pptx`를 채운다(docgen 환경이 없으면 명령만 안내) ④ 설치기 출력의 "다음 단계"를 전달하고 `python .claude/hooks/doc_lint.py --all docs/`로 확인. 로고는 `--logo`로 받은 파일을 `docs/assets/logo.png`로 복사만 한다(저장소에 로고를 넣지 않는 이유를 한 줄 안내). `AGENTS.md`가 있으면(Codex 병행 팀) 같은 스니펫을 거기에도 넣는다.
+절차: ① `STYLE.md`가 이미 있으면 `--update` 여부 확인, 없으면 신규. `--uninstall`이면 훅 파일·settings 항목·CLAUDE 스니펫만 제거하고 `STYLE.md`·`docs/`는 남긴다 ② 질문 최대 3개를 한 번에: 조직 표기(기본 `데이타솔루션`), 문서 톤(`서술식`(~다) 기본 / `경어`(~습니다)), 회사 공식 템플릿(pptx·docx) 파일이 있는지(있으면 경로). Python 프로젝트 여부는 `pyproject.toml` 존재로 자동 판단 ③ `install.py` 실행(§11.6 계약). 템플릿 경로를 받았으면 이어서 `python -m docgen theme-from-pptx <경로> --name company --out-dir docs`를 실행해 `docs/theme.json`을 만들고 `STYLE.md`의 `theme`·`template_pptx`를 채운다(docgen 환경이 없으면 명령만 안내) ④ 설치기 출력의 "다음 단계"를 전달하고 `python .claude/hooks/doc_lint.py --all docs/`로 확인. 로고는 `--logo`로 받은 파일을 `docs/assets/logo.png`로 복사만 한다(저장소에 로고를 넣지 않는 이유를 한 줄 안내). `AGENTS.md`가 있으면(Codex 병행 팀) 같은 스니펫을 거기에도 넣는다. `--with-archify`는 §5.6의 외부 스킬을 사용자 전역에 설치한다(프로젝트 파일 없음, Node 18+ 필요).
 
 ### 8.2 `doc-write` (문서: md → docx)
 
@@ -690,6 +701,7 @@ allowed-tools:
 | `writing-rules-ko.md` | review-report-writer `writing-rules.md`를 흡수·확장: 문장 원칙 12개, AI식 표현 목록(§7의 H2~H5·S3~S7 어휘를 사람이 읽게 정리), 사실/추론/권고 표현, 비교표 규칙, 좋은 예/나쁜 예 쌍 10개(설계서·가이드·브리프·덱 각각), "사람이 쓴 것처럼"의 실체(결론 먼저, 구체 수치+출처, 판단 문장 1인칭 조직 주어 "~로 판단한다", 문단 길이 변화, 반복 없음, 요약 없음, 단점 명시) | doc-write, deck-write, ai-trend-brief |
 | `python-conventions.md` | 레이어 규칙, 설정·로깅·예외·비동기·타임아웃·재시도 규약, 네이밍, 타입 힌트, 의존성 정책(uv, 잠금), 프롬프트 파일 규약(frontmatter·버전·변수·골든 테스트), 금지 목록(전역 상태, `print`, 광범위 `except`, 동기 requests in async, 인라인 프롬프트) | fastapi-service, py-review, py-test, py-refactor |
 | `genai-patterns.md` | 생성형 AI 서비스 설계 패턴. **RAG**(수집→청킹(크기·겹침 기준)→임베딩(게이트웨이 `/embeddings`)→pgvector 저장→하이브리드 검색 선택 기준→프롬프트 조립(인용 형식)→응답 검증), **구조화 출력·툴 호출**(스키마 우선, 실패 재시도 1회), **에이전트**(단순 루프부터, 단계 수·비용 상한), **비동기 작업**(202+폴링, 멱등 키), **가드레일**(입력 길이·인젝션 패턴·출력 PII, 게이트웨이 guardrails와 역할 분담), **평가 기초**(골든 셋 20~50문항, 검색 적중률·정답 포함률·사람 스팟체크, promptfoo 안내), **비용·지연 설계**(모델 티어링, 캐시, 스트리밍 우선), 각 패턴의 설계서 TO-BE 구성도 예시(DSL) | fastapi-service, doc-write, deck-write, py-review |
+| `diagram-tools.md` | docgen 구성도 DSL 대 archify(§5.6) 선택 규칙(본문 구성도는 DSL, 독립 HTML·시퀀스·데이터 흐름·상태는 archify), 비교표, archify 절차(파일 위치 `docs/diagrams/`, 한국어·locale 생략, 노드 종류 대응, validate·deliver 명령, PNG 첨부 경로 2가지, 보고 형식), 하지 않는 것 | doc-write, deck-write, ai-init |
 | `arch-doc-types.md` | 아키텍처 문서 유형: 설계서(개요·요구사항·제약·AS-IS·TO-BE·구성도 3수준(컨텍스트/컨테이너/컴포넌트)·인터페이스·데이터·비기능(성능·가용성·보안·비용) 표·단계별 구축·위험), 인터페이스 정의서(엔드포인트 표: 메서드·경로·요청·응답·오류·SLA), 운영 런북(증상→확인→조치→에스컬레이션), ADR(맥락·결정·대안·결과, 상태), 구성도 규약(노드 종류 6종과 색 역할, 화살표 라벨은 프로토콜/데이터, 그룹은 경계, 좌→우 요청 흐름, 외부는 점선) | doc-write, deck-write |
 
 ### 8.13 `skills/llms.txt`
@@ -1114,6 +1126,7 @@ ai-work-skill/
 ├── references/                    # 스킬 공용 (§8.12)
 │   ├── writing-rules-ko.md
 │   ├── python-conventions.md
+│   ├── diagram-tools.md           # §5.6 archify 대 DSL
 │   └── arch-doc-types.md
 ├── themes/
 │   ├── datasolution.json
@@ -1260,7 +1273,7 @@ glossary: docs/glossary.md          # 선택
 ```
 python templates/install.py --target <dir> [--org "데이타솔루션 기술연구소"] [--tone 서술식|경어]
                             [--theme datasolution] [--template-pptx <pptx>] [--template-docx <docx>]
-                            [--logo <png>] [--with-ui] [--ui-skill-set <경로>]
+                            [--logo <png>] [--with-ui] [--ui-skill-set <경로>] [--with-archify]
                             [--no-python] [--update] [--force] [--uninstall]
                             [--gitlab-url https://gitlab.example.com]
 ```
@@ -1277,9 +1290,10 @@ python templates/install.py --target <dir> [--org "데이타솔루션 기술연�
 9. `--logo`: `docs/assets/logo.png`로 복사. `--template-pptx/--template-docx`: `STYLE.md`의 `template_pptx`·`template_docx`에 경로를 기록만 한다(테마 추출은 `ai-init` 스킬이 docgen으로 수행).
 9-1. `--uninstall`: `.claude/hooks/{doc_lint,py_format}.py` 삭제, `settings.json`에서 우리 command 항목만 제거, CLAUDE.md·AGENTS.md의 스니펫 블록 제거. `STYLE.md`·`docs/`·`.mcp.json`은 남긴다(데이터).
 10. `--with-ui`: ui-skill-set 루트 탐색(§5.5) → `python -m docgen theme-export --tokens-css`가 가능하면(플러그인의 docgen 환경) 램프를 생성해 `node <ui>/templates/install.mjs --target . --mode operate --stack <감지> --hue blue` 실행 후 `tokens.css`의 accent 블록 치환. docgen 환경이 없으면 install.mjs만 실행하고 램프 치환은 안내로 대체.
+10-1. `--with-archify`(§5.6): `~/.claude/skills/archify`가 있으면 건너뛰고 갱신 명령만 안내. 없으면 `npx -y skills add tt-a1i/archify --skill archify --agent claude-code --global --copy --yes`(240초 타임아웃) 실행. 이어서 `node <archify>/bin/archify.mjs doctor`로 확인. node·npx가 없으면 수동 명령만 안내. `--uninstall`은 건드리지 않는다(사용자 전역 자산).
 11. "다음 단계" 출력: STYLE.md §1 채우기, `doc_lint --all docs/` 실행, GitLab MCP 인증(`/mcp`), `LITELLM_BASE_URL` 설정.
 
-순수 함수(`merge_settings`, `fill_frontmatter`, `append_snippet`, `merge_mcp_json`, `detect_python`)는 export되어 `tests/test_install.py`가 검사한다. 파일 I/O는 `main()`에만.
+순수 함수(`merge_settings`, `fill_frontmatter`, `append_snippet`, `merge_mcp_json`, `detect_python`, `archify_install_cmd`, `archify_home`)는 export되어 `tests/test_install.py`가 검사한다. 파일 I/O는 `main()`에만.
 
 ### 11.7 플러그인 매니페스트와 `.mcp.json`
 
@@ -1355,6 +1369,7 @@ python templates/install.py --target <dir> [--org "데이타솔루션 기술연�
 | 07 | 신규 입사자 개발 가이드 (로컬 환경·브랜치·배포) | "알아보겠습니다", 이모지 제목, 요약 반복 | Diataxis how-to 순서, 명령 블록, 존댓말 통일 | `doc_lint` 0, S16 0 |
 | 08 | services 패키지 순환 import 정리 계획 | 한 번에 다 옮기기, 동작 변경 섞기 | import_graph 전후, ADR, 단계별 검증 | ADR 파일 존재, 순환 0 |
 | 09 | AI가 쓴 도입 검토 초안(픽스처: 출처 없는 수치, "연구에 따르면", 교훈형 마무리, 균일 문단)을 "사람이 쓴 것처럼, 내 재료로" 고치기 | 표면 신호만 지우고 완료 선언, 없는 출처·경험 생성 | 3축 진단 보고 → 재료 질문 ≤ 3 → 확인 후보 표(근거 열) → 재작성 | `humanize_scan --json`의 unsourced 후보가 재작성 후 감소, `doc_lint` 0, 핵심 3줄 보존(수동) |
+| 10 | LLM 게이트웨이 호출 구조를 공유용 독립 HTML 다이어그램으로(archify, 픽스처 JSON 동봉) | 그림을 말로 설명, 회사명·URL 삽입, 검증 실패한 HTML 전달, 세로로 긴 배치 | `docs/diagrams/*.architecture.json` → validate 9항목 → deliver 영수증 → (Chrome 있으면) visual-check pass, 뷰어 UI 영어 고지 | `validate --json` ok, `deliver --json` ok + SHA, `visual-check` status pass 또는 skipped(Chrome 없음) |
 
 `eval/check_output.py <run_dir>`: docx/pptx를 unzip해 `srgbClr val`·`w:color w:val`·`w:shd w:fill`을 수집하고 테마 팔레트(+흰·검·회색 계열 3개) 밖 값을 보고, `.deck.md`에 S9~S12를 적용, 산문 파일에 `doc_lint --all`. 종합 `PASS/FAIL`.
 
@@ -1382,7 +1397,7 @@ python templates/install.py --target <dir> [--org "데이타솔루션 기술연�
 | **M2 개발 (완료)** | FR-20~26, 35: fastapi-service+scaffold(7옵션)+route_table, gitlab-ci+ci_lint, py-test+test_gaps, py-review, py-refactor+import_graph, python-conventions, genai-patterns | 완료 2026-09-04. 스크립트 10테스트 PASS, 생성 골격이 Windows 에서 pytest 통과(base 8, sse 9). 골든 03·04·08 은 M4 eval 에서 실측 |
 | **M3 LLM 운영 (완료)** | FR-27~30: llm-gateway(assets+참조 7종), litellm-ops MCP(12툴, config_validate V1~V8, 쓰기 게이트), model-serving(vram_estimate·bench_llm), ai-trend-brief | 완료 2026-09-04. litellm_ops 21 + 스크립트 5 테스트 PASS(httpx MockTransport), config.example 검증 통과. 실제 LiteLLM 대상 `gateway_health`·`test_completion` 은 게이트웨이 확보 시(부록 F-4). 골든 05·06 은 M4 eval |
 | **M4 배포 (완료)** | FR-31~34: `.claude-plugin/` 매니페스트·`.mcp.json`·`skills/llms.txt`·LICENSE·NOTICE, `eval/`(check_output + 골든 8 + 기준선), ui-skill-set 연동(accent_ramp), GitHub Actions CI(ubuntu+windows) | 완료 2026-09-04. 매니페스트 JSON 유효, check_output 렌더 PASS 재현(test_m4_eval), 171 테스트. 실제 마켓플레이스 설치·실기기 골든은 합류 후(부록 F) |
-| **M5 사람화 (완료)** | FR-39: `humanize` 스킬(사전·진단·재작성), `humanize_scan.py`, references 2종, 골든 09, `doc-write`·`deck-write`·preflight·스니펫 연결, 부록 G | 완료 2026-09-06. humanize_scan 테스트 7 + stdlib 검사 1 추가(누적 179 PASS, manual 1 제외), ruff clean, doc_lint 자기 검사 하드 0(103파일). 골든 09 픽스처에 `humanize_scan` 실행: 확인 후보 2건(근거 없음 2), generalization·moral-closer·uniform-paragraphs 검출, 재료 밀도 0.07. 스킬 세션 재현(진단→재작성)은 설치 후(부록 F) |
+| **M5 사람화·다이어그램 연동 (완료)** | FR-39: `humanize` 스킬(사전·진단·재작성), `humanize_scan.py`, references 2종, 골든 09, `doc-write`·`deck-write`·preflight·스니펫 연결, 부록 G. FR-40: `install.py --with-archify`, `references/diagram-tools.md`, 연결 | 완료 2026-09-06. FR-40: archify v2.17.0-dev.1 전역 설치·doctor ok, 한국어 예제 validate 9항목·deliver·visual-check PNG 4장 실측, install 순수 함수 테스트 1, `--with-archify` 실행 확인(이미 설치 → 건너뜀 + doctor). humanize_scan 테스트 7 + stdlib 검사 1 추가(누적 179 PASS, manual 1 제외), ruff clean, doc_lint 자기 검사 하드 0(103파일). 골든 09 픽스처에 `humanize_scan` 실행: 확인 후보 2건(근거 없음 2), generalization·moral-closer·uniform-paragraphs 검출, 재료 밀도 0.07. 스킬 세션 재현(진단→재작성)은 설치 후(부록 F) |
 
 권장 순서는 M0 → M1 → M2 → M3 → M4 → M5. M1과 M2는 독립이라 병렬 가능. 각 마일스톤 끝에 `docs/PRD.md` 상태 표와 이 표를 갱신한다.
 
@@ -1409,6 +1424,7 @@ python templates/install.py --target <dir> [--org "데이타솔루션 기술연�
 | D13 | 차트 렌더링 범위 | pptx 네이티브만 / docx에도 이미지 | **pptx 네이티브만**, docx·md는 표 | 이미지 차트는 matplotlib 의존성과 색 오탐을 부른다. 문서에서는 표가 더 정확하다 |
 | D14 | Office 어절 줄바꿈 속성 | `w:wordWrap 0` + `eaLnBrk` / 미지정 | **지정 후 실측 확인** | 한글 문서에서 단어가 잘리면 "기계 티"가 난다. 확정값은 M1 픽스처 실측으로 |
 | D15 | 사람화 검사의 위치 | `doc_lint` 소프트 룰 확장 / 별도 스크립트(훅 없음) / Stop 훅에 추가 | **별도 스크립트** | 확인 후보·재료 밀도·부족한 축은 차단할 수 없는 판단 항목이다. 훅에 넣으면 §15의 "훅 잔소리" 리스크가 커지고 오탐이 문서를 짧게 만든다. 스킬이 필요할 때 부르고 결과를 사람이 읽는다. 도그푸딩 뒤 일반화·교훈형 마무리 두 개만 S19·S20 승격을 검토한다 |
+| D16 | archify 설치 범위 | 저장소에 벤더링 / 사용자 전역 설치만(`--with-archify`) / 프로젝트 `.claude/skills`에 복사 | **사용자 전역 설치만** | 매일 갱신되는 외부 프로젝트(dev 채널)라 벤더링하면 곧 낡는다. 프로젝트마다 700KB 넘는 JS를 커밋할 이유가 없다. 자체 업데이트 알림이 있다. 회사 테마 미적용은 독립 산출물 용도라 감수하고, 본문 구성도는 DSL로 못 박는다. DSL→archify JSON 변환기는 만들지 않는다(수요가 생기면 docgen 툴로 검토) |
 
 ---
 
@@ -1590,6 +1606,7 @@ seamless(ly) · leverage · cutting-edge · state-of-the-art · game-changer/cha
 | (사용자 추가 요구) 문서·덱이 회사 것처럼 | `STYLE.md`, 테마, `doc_lint`, 템플릿 모드, 부록 B | FR-1~4, 10, 11, 18 | test_doc_lint, test_theme, docgen | 01, 02, 07 | M0, M1 | |
 | (사용자 추가 요구) ui-skill-set 연동 | `theme_export --tokens-css`, `install --with-ui` | FR-33 | test_theme(램프·대비) | (수동) | M4 | |
 | (사용자 추가 요구) 산출물 사람화 | `humanize`, `humanize_scan.py`, 부록 G | FR-39 | test_humanize_scan | 09 | M5 | |
+| (사용자 추가 요구) 독립 다이어그램(archify) | `install.py --with-archify`, `references/diagram-tools.md` | FR-40 | test_install(archify) | (수동: 한국어 예제 실측) | M5 | |
 
 ## 부록 F. 합류 첫 주 확인 목록 (결정값을 실제로 바꿀 정보)
 

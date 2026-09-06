@@ -1,4 +1,4 @@
-ai-init: ai-work-skill 을 현재 프로젝트에 설치(STYLE.md·doc_lint 훅·CLAUDE 규약·docs 골격·GitLab MCP). 트리거: 프로젝트 세팅, 문서 규약 설치, 스타일 가이드, 온보딩, --update, --with-ui.
+ai-init: ai-work-skill 을 현재 프로젝트에 설치(STYLE.md·doc_lint 훅·CLAUDE 규약·docs 골격·GitLab MCP). 트리거: 프로젝트 세팅, 문서 규약 설치, 스타일 가이드, 온보딩, --update, --with-ui, --with-archify(독립 HTML 다이어그램 스킬 설치).
 doc-write: 설계서·검토보고서·가이드·런북·ADR·인터페이스 정의서·회의록·브리프·README·교육 문서를 한국 기업 문서체로 쓰고 docx 로 렌더링. 트리거: 설계서, 문서 작성, 가이드, 보고서, AS-IS/TO-BE, docx.
 deck-write: 경영진 보고·기술 공유·제안·교육 슬라이드를 헤드 메시지·개조식·회사 테마로 만들고 pptx 로 렌더링. 트리거: 덱, PPT, pptx, 발표자료, 장표, 10장 요약.
 fastapi-service: FastAPI 생성형 AI 서비스 골격 생성·표준화(게이트웨이 경유, 테스트·Docker·CI). 트리거: 서비스 골격, API 서버, 요약/챗/RAG API, 개발 환경 구축, SSE.

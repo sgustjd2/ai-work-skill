@@ -15,6 +15,7 @@
 | API·오픈소스 활용 | llm-gateway, model-serving | FR-27, 29 | litellm_ops(21), vram/bench(5) | 05 | M3 | **완료**: 게이트웨이 설정·클라이언트, vLLM·양자화 참조 |
 | 최신 AI 트렌드 조사·적용 | ai-trend-brief | FR-30 | (형식은 M4 eval) | 06 | M3 | **완료**: SKILL + sources.yaml + brief-template |
 | (사용자 추가 요구) 산출물 사람화 | humanize, humanize_scan.py, 부록 G | FR-39 | test_humanize_scan | 09 | M5 | **완료**: SKILL(사전·진단·재작성) + references 2종 + 스크립트, 7 테스트 |
+| (사용자 추가 요구) 독립 다이어그램(archify) | install.py --with-archify, references/diagram-tools.md | FR-40 | test_install(archify 1) | 10 | M5 | **완료**: 전역 설치·doctor ok, validate 9항목·deliver·visual-check pass 실측 |
 | LLM 이해·API 사용 | LLMClient(게이트웨이), python-conventions | FR-26, 27 | 생성 서비스 test_llm_client | 03 | M2, M3 | **M2 완료**: 게이트웨이 클라이언트·재시도·비용헤더·프롬프트 로더, python-conventions |
 | 모델 최적화·서빙 | model-serving, vram_estimate·bench_llm | FR-29 | test_m3_scripts(5) | manual | M3 | **완료**: VRAM 산정·벤치, sizing·quantization·vllm·alternatives |
 | 클라우드(Azure/AWS/GCP) | azure·bedrock·vertex 참조, deploy-targets | FR-21, 27 | config_validate 픽스처 | 05 | M2, M3 | **M3 완료**: 제공자 3종 연결 참조, config.example 검증 통과 |
@@ -99,3 +100,4 @@ FR-39 구현. `tests/test_humanize_scan.py` 7개 + stdlib 검사 1개 추가(누
 - 연결: `doc-write` 절차 2·7, `deck-write` 절차 7, `preflight-doc.md` 공통 점검 2항목, `templates/CLAUDE.snippet.md` 규약 1줄, `skills/llms.txt` 12줄, README·AGENTS.md·hosts.md·플러그인 매니페스트 키워드.
 - 원천: 위키독스 "누구나 할 수 있는 AI 글쓰기" 02장 4개 절(`docs/research/sources-2026-09-06.md`, PRD 부록 G). 표면 신호는 doc_lint 가 이미 잡으므로 스크립트는 재료·판단·근거만 본다(D15: 훅이 아니라 스킬이 부르는 스크립트).
 - 골든 09(`eval/prompts/09-humanize.md`): 픽스처에 `humanize_scan` 을 돌려 확인 후보 2건(근거 없음 2)·신호 3종·재료 밀도 0.07 을 확인. 진단→재작성 재현은 스킬이 붙은 세션에서.
+- FR-40 archify 연동(PRD §5.6, D16): `install.py --with-archify`(`archify_install_cmd`·`archify_home` + 테스트 1, 이미 설치면 건너뛰고 doctor), `references/diagram-tools.md`(DSL 대 archify, 절차, PNG 첨부), `ai-init`·`doc-write`·`deck-write`·`arch-doc-types`·스니펫·README·AGENTS·hosts 연결. 실측: v2.17.0-dev.1 전역 설치, 한국어 게이트웨이 예제 validate 9항목·deliver(HTML 708KB)·visual-check pass(가로 배치, PNG 4장). 골든 10(`eval/prompts/10-archify.md`)에 픽스처 JSON. 출처 `docs/research/sources-2026-09-06.md`.

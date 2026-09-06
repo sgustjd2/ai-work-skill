@@ -41,7 +41,7 @@ allowed-tools:
 
 3. 골격을 잡는다. `references/doc-types.md` 의 유형별 골격을 가져와 내용 없는 절은 통합하거나 지운다. 항상 남는 절은 개요(결론 포함), 본문, 권고/결정, 추가 확인사항이다.
 
-4. 쓰기 직전에 `references/writing-rules-ko.md` 를 읽는다(계획 단계에서는 읽지 않는다). 아키텍처 문서면 `references/arch-doc-types.md`(M1 에 추가)도 읽는다. 규칙 요약: 결론 먼저, 사실/추론/권고 구분, 수치에 출처, 문단 길이 변화, 접속사 남발 금지, 마지막 요약 금지, 비교표 마지막 열은 "검토 의견", 모르는 값은 마커. 구성도는 ` ```diagram ` 블록으로 쓴다(§10.3). 그림을 말로 설명하지 않는다.
+4. 쓰기 직전에 `references/writing-rules-ko.md` 를 읽는다(계획 단계에서는 읽지 않는다). 아키텍처 문서면 `references/arch-doc-types.md`(M1 에 추가)도 읽는다. 규칙 요약: 결론 먼저, 사실/추론/권고 구분, 수치에 출처, 문단 길이 변화, 접속사 남발 금지, 마지막 요약 금지, 비교표 마지막 열은 "검토 의견", 모르는 값은 마커. 구성도는 ` ```diagram ` 블록으로 쓴다(§10.3). 그림을 말로 설명하지 않는다. 문서 밖 독립 다이어그램(공유·리뷰용 HTML, 시퀀스·데이터 흐름·상태)은 플러그인 루트 `references/diagram-tools.md` 의 archify 절차를 따르되, 본문 TO-BE 구성도는 DSL 로 그린다.
 
 5. 파일을 쓴다. `docs/<영역>/<제목>.doc.md`. frontmatter 를 채운다. `date` 는 오늘, `version` 은 0.1, `history` 는 1행.
 

@@ -5,7 +5,7 @@ ai-work-skill 을 대상 프로젝트에 설치한다. 순수 Python 표준 라�
 
   python install.py --target <dir> [--org "데이타솔루션 기술연구소"] [--tone 서술식|경어]
                     [--theme datasolution] [--template-pptx <pptx>] [--template-docx <docx>]
-                    [--logo <png>] [--with-ui] [--ui-skill-set <경로>]
+                    [--logo <png>] [--with-ui] [--ui-skill-set <경로>] [--with-archify]
                     [--no-python] [--update] [--force] [--uninstall]
                     [--gitlab-url https://gitlab.example.com]
 
@@ -237,9 +237,36 @@ def add_gitignore_line(existing, line):
     return prefix + line + "\n"
 
 
+# ─── archify (FR-40, PRD 5.6): 외부 다이어그램 스킬. 사용자 전역에 설치만 한다 ─────
+ARCHIFY_REPO = "tt-a1i/archify"
+
+
+def archify_install_cmd(agent="claude-code"):
+    """`npx skills` CLI 로 archify 를 전역에 복사 설치하는 argv(README 의 명시적 비대화 형식)."""
+    return [
+        "npx",
+        "-y",
+        "skills",
+        "add",
+        ARCHIFY_REPO,
+        "--skill",
+        "archify",
+        "--agent",
+        agent,
+        "--global",
+        "--copy",
+        "--yes",
+    ]
+
+
+def archify_home(home=None):
+    """Claude Code 전역 스킬 위치. Codex 는 ~/.agents/skills/archify (docs/hosts.md)."""
+    return Path(home or Path.home()) / ".claude" / "skills" / "archify"
+
+
 # ─── 파일 I/O (main) ─────────────────────────────────────────────────────────
 def _parse_args(argv):
-    bools = {"with-ui", "no-python", "update", "force", "uninstall"}
+    bools = {"with-ui", "with-archify", "no-python", "update", "force", "uninstall"}
     o = {}
     i = 0
     while i < len(argv):
@@ -430,6 +457,7 @@ def main(argv=None):
                     encoding="utf-8",
                 )
                 log("✓ tokens.css 에 테마 액센트 램프 주입(문서·덱·UI 가 같은 파랑)")
+
             elif theme_file.exists():
                 (target / "docs").mkdir(exist_ok=True)
                 (target / "docs" / "ui-accent-ramp.css").write_text(
@@ -438,6 +466,33 @@ def main(argv=None):
                 )
                 log("· tokens.css 없음. docs/ui-accent-ramp.css 로 램프를 저장했습니다.")
 
+    # 10-1. --with-archify (FR-40): 독립 HTML 다이어그램 스킬을 사용자 전역에 설치
+    if a.get("with-archify"):
+        home = archify_home()
+        npx = shutil.which("npx")
+        node = shutil.which("node")
+        if home.exists():
+            log(f"· archify 이미 설치됨: {home}. 갱신은 `{' '.join(archify_install_cmd())}`")
+        elif not npx or not node:
+            log("· node/npx 미발견(Node 18+ 필요). 수동: " + " ".join(archify_install_cmd()))
+        else:
+            try:
+                cmd = [npx, *archify_install_cmd()[1:]]
+                subprocess.run(cmd, check=True, capture_output=True, timeout=240)
+                log(f"✓ archify 설치(전역): {home}")
+            except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
+                log(f"· archify 설치 실패({e}). 수동: " + " ".join(archify_install_cmd()))
+        if node and (home / "bin" / "archify.mjs").exists():
+            try:
+                subprocess.run(
+                    [node, str(home / "bin" / "archify.mjs"), "doctor"],
+                    check=True,
+                    capture_output=True,
+                    timeout=60,
+                )
+                log("✓ archify doctor 통과. 사용법은 references/diagram-tools.md")
+            except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+                log("· archify doctor 실패. `node <archify>/bin/archify.mjs doctor` 로 확인")
     # 11. 다음 단계
     log("")
     log("다음 단계:")

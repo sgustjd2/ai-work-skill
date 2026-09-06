@@ -1,6 +1,6 @@
 ## 문서·코드 규약 (ai-work-skill)
 - 문서(설계서·보고서·가이드·런북·ADR·브리프)나 덱을 만들기 전에 @STYLE.md 를 읽고 `doc-write` / `deck-write` 스킬 절차를 따른다. 코드 전 한 줄 "문서 리드/덱 리드"를 선언한다.
-- 문서는 `.doc.md`/`.deck.md`로 쓰고 docx·pptx는 `docgen`(MCP 또는 `python -m docgen`)으로만 렌더링한다. python-docx/python-pptx를 직접 호출하지 않는다. 색·폰트는 테마 JSON에만 있다.
+- 문서는 `.doc.md`/`.deck.md`로 쓰고 docx·pptx는 `docgen`(MCP 또는 `python -m docgen`)으로만 렌더링한다. python-docx/python-pptx를 직접 호출하지 않는다. 색·폰트는 테마 JSON에만 있다. 본문 구성도는 ` ```diagram ` DSL, 독립 HTML·시퀀스·상태·데이터 흐름은 archify(`references/diagram-tools.md`, `/ai-init --with-archify`).
 - em-dash·상투어·이모지·느낌표·가짜 채움(홍길동/TBD)·시크릿은 훅이 차단한다. 차단되면 우회하지 말고 고친다. 모르는 값은 `[확인 필요]`.
 - 산출물(문서·덱·브리프·리뷰·메일) 전에 핵심 3줄(주장·근거·미확인)을 사용자 말로 적고, 초안 뒤에는 `humanize` 스킬로 3축(문체·재료·판단) 진단과 확인 후보 표(수치·출처·인용·고유명사·제도)를 낸다. 표면 신호만 지우고 끝내지 않는다. 없는 수치·출처·경험을 만들지 않는다.
 - FastAPI 서비스는 `fastapi-service` 골격, CI는 `gitlab-ci` 템플릿, 테스트는 `py-test` 규약, 리뷰는 `py-review` 체크리스트를 따른다. LLM 호출은 LiteLLM 게이트웨이 경유만.
