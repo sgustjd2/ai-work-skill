@@ -43,6 +43,27 @@ claude plugin marketplace add sgustjd2/ai-work-skill
 | AI 초안 사람화 | "이 초안 AI 티 나는데 내 재료로 고쳐줘" | 3축(문체·재료·판단) 진단 보고와 확인 후보 표, 재료를 받은 뒤 재작성 |
 | 독립 다이어그램 | "게이트웨이 호출 시퀀스를 HTML 로 그려줘" | archify JSON(`docs/diagrams/`) → 검증된 독립 HTML(`docs/_build/diagrams/`), 필요하면 PNG 로 문서 첨부 |
 
+### 스킬 호출 명령 (슬래시 커맨드)
+
+말로 부탁하면 스킬이 자동으로 뜨지만, 슬래시 커맨드로 직접 부를 수도 있다. 모든 스킬은 `user-invocable` 이라 Claude Code 에서 `/<스킬 이름>` 으로 호출한다. 대괄호는 선택 인수다(없으면 스킬이 되묻거나 기본값으로 진행한다). 트리거 어휘 전체는 [skills/llms.txt](skills/llms.txt) 에 있다.
+
+| 스킬 | 호출 | 인수 | 하는 일 |
+|---|---|---|---|
+| `ai-init` | `/ai-init [--update \| --with-ui \| --with-archify \| --logo <경로> \| --no-python]` | 설치 옵션 | 프로젝트에 STYLE.md·훅·CLAUDE 규약·docs 골격·GitLab MCP 설치. `--with-ui` 는 ui-skill-set, `--with-archify` 는 archify 를 함께 |
+| `doc-write` | `/doc-write [문서 유형과 주제 \| 수정할 파일 \| 리뷰할 파일]` | 주제 또는 파일 | 설계서·검토보고서·가이드·런북·ADR·회의록·브리프를 한국 기업 문서체로 쓰고 docx 렌더 |
+| `deck-write` | `/deck-write [덱 목적·독자·장수 \| 원본 .doc.md 경로]` | 목적·장수 또는 원본 | 경영진·기술·교육 슬라이드를 헤드 메시지·개조식·회사 테마로 pptx |
+| `fastapi-service` | `/fastapi-service [서비스 이름과 기능 한 줄]` | 서비스 한 줄 | 게이트웨이 경유 FastAPI 골격 생성(테스트·Docker·CI) |
+| `gitlab-ci` | `/gitlab-ci [생성 \| 진단 <pipeline id\|MR> \| 배포 대상]` | 모드·대상 | GitLab CI/CD 파이프라인 생성·진단·운영 |
+| `py-review` | `/py-review [MR 번호 \| 브랜치 \| 경로 \| (없으면 작업 트리 diff)]` | 대상 | 심각도·파일:줄·수정안 형식 코드 리뷰(게시는 승인 후) |
+| `py-test` | `/py-test [대상 모듈·함수 \| 실패 로그]` | 대상 | pytest 테스트 작성·정리(respx 모킹, live_llm 격리) |
+| `py-refactor` | `/py-refactor [대상 패키지·모듈]` | 대상 | 모듈화·순환 import·레이어 정리 계획과 안전한 수행(ADR) |
+| `llm-gateway` | `/llm-gateway [구축 \| 모델 추가 \| 키 발급 \| 장애 진단 \| 비용]` | 모드 | LiteLLM 게이트웨이 설계·구축·운영(config 검증 후 배포) |
+| `model-serving` | `/model-serving [모델 이름 \| GPU 사양 \| 벤치 대상 URL]` | 모델·사양 | vLLM 서빙·VRAM 산정·양자화·벤치 |
+| `ai-trend-brief` | `/ai-trend-brief [주간 \| 월간 \| 주제]` | 기간·주제 | AI 트렌드를 우리 서비스 영향·적용까지 담아 브리프 |
+| `humanize` | `/humanize [사전 \| 진단 <파일> \| 재작성 <파일>]` | 모드·파일 | AI 초안을 3축(문체·재료·판단)으로 진단하고 확인 후보 표를 뽑아 재작성 |
+
+archify 는 이 플러그인의 스킬이 아니라 `/ai-init --with-archify` 로 설치하는 외부 스킬이다. 설치 뒤에는 "게이트웨이 시퀀스 HTML 로 그려줘" 처럼 말로 부르거나 `node ~/.claude/skills/archify/bin/archify.mjs` 를 직접 쓴다(규칙은 [references/diagram-tools.md](references/diagram-tools.md)).
+
 ### 문서 한 편을 끝까지
 
 설계서를 부탁하면 스킬이 `STYLE.md` 를 읽고 한 줄로 방향을 선언한 뒤 `.doc.md` 로 초안을 쓴다. 그다음 렌더링한다.
