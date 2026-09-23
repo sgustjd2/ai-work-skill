@@ -2,7 +2,7 @@ import httpx
 import respx
 
 _COMPLETION = {
-    "model": "gpt-4o",
+    "model": "chat",
     "choices": [{"message": {"role": "assistant", "content": "요약 결과"}}],
     "usage": {"prompt_tokens": 10, "completion_tokens": 3, "total_tokens": 13},
 }

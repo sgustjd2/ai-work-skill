@@ -175,7 +175,7 @@ def env_text(on: set[str]) -> str:
         "APP_LOG_LEVEL=INFO",
         "APP_LLM_BASE_URL=http://localhost:4000",
         "APP_LLM_API_KEY=changeme",
-        "APP_LLM_DEFAULT_MODEL=gpt-4o",
+        "APP_LLM_DEFAULT_MODEL=chat",
         "APP_REQUEST_TIMEOUT_S=30",
     ]
     if "with-db" in on:

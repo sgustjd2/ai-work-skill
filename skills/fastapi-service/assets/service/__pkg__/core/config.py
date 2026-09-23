@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     # LLM 게이트웨이(LiteLLM). 벤더 SDK 키를 앱에 두지 않는다.
     llm_base_url: str = "http://localhost:4000"
     llm_api_key: SecretStr = SecretStr("")
-    llm_default_model: str = "gpt-4o"
+    llm_default_model: str = "chat"
     request_timeout_s: float = 30.0
 
     cors_origins: list[str] = []
