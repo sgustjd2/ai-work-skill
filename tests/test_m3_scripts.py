@@ -23,6 +23,8 @@ def test_vram_weights_exact():
     assert r["weights_gb"] == 64.0  # 32B * 2 bytes
     r4 = ve.estimate(32, "int4", ctx=8192, batch=1)
     assert r4["weights_gb"] == 16.0  # 32B * 0.5
+    # MoE 는 활성이 아니라 총 파라미터로 잡는다(gpt-oss-120b 117B, MXFP4)
+    assert ve.estimate(117, "mxfp4")["weights_gb"] == 58.5
     assert r["total_gb"] > r["weights_gb"]  # KV + 여유 포함
 
 

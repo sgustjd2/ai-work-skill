@@ -23,6 +23,9 @@ DTYPE_BYTES = {
     "int4": 0.5,
     "awq": 0.5,
     "gptq": 0.5,
+    # ponytail: FP4 스케일 오버헤드(약 6~12%)는 여유 20% 에 묻는다
+    "nvfp4": 0.5,
+    "mxfp4": 0.5,
 }
 # 파라미터 규모별 기본 아키텍처(레이어 수, hidden). 값을 주면 그것을 쓴다.
 PRESETS = [
@@ -32,7 +35,8 @@ PRESETS = [
     (70, 80, 8192),
     (1e9, 96, 12288),
 ]
-GPU_CARDS = [("24GB", 24), ("48GB", 48), ("80GB", 80)]
+# L4·L40S·H100·RTX PRO 6000·H200·B200 급. 카드 목록은 references/sizing.md 표와 맞춘다.
+GPU_CARDS = [("24GB", 24), ("48GB", 48), ("80GB", 80), ("96GB", 96), ("141GB", 141), ("180GB", 180)]
 
 
 def _preset(params_b: float) -> tuple[int, int]:

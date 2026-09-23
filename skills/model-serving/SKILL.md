@@ -25,7 +25,7 @@ allowed-tools:
 
 2. `references/sizing.md` 의 표로 GPU 수와 정밀도를 정한다. 양자화 선택은 `references/quantization.md`(AWQ·GPTQ·FP8·GGUF, 품질 손실 확인법).
 
-3. `references/vllm.md` 로 `vllm serve` 인자를 정한다(`--dtype`, `--max-model-len`, `--tensor-parallel-size`, `--quantization`, `--gpu-memory-utilization`, `--enable-prefix-caching`).
+3. `references/vllm.md` 로 `vllm serve` 인자를 정한다(`--max-model-len`, `--tensor-parallel-size`, `--gpu-memory-utilization`, `--kv-cache-dtype`, 추론 모델이면 `--reasoning-parser`, 툴 호출이면 `--tool-call-parser`). 프리픽스 캐싱은 기본으로 켜져 있다. MoE 는 총 파라미터로 VRAM 을 잡는다.
 
 4. 벤치한다.
    ```
@@ -39,7 +39,7 @@ allowed-tools:
 
 ## references
 
-`vllm.md`(서빙 인자), `quantization.md`(양자화 선택), `sizing.md`(산식과 표), `alternatives.md`(TGI·Ollama·SGLang 비교).
+`vllm.md`(서빙 인자), `quantization.md`(양자화 선택), `sizing.md`(산식·GPU 표·MoE·라이선스), `alternatives.md`(SGLang·Ollama·Dynamo·llm-d 비교).
 
 ## 하지 않는 것
 

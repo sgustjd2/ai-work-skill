@@ -4,7 +4,7 @@
 동시성별로 TTFT(첫 토큰까지) p50/p95, tokens/s, 실패율을 잰다. 표준 라이브러리만 쓴다.
 실제 엔드포인트가 필요하므로 기본 스위트에서는 순수 통계 함수만 테스트하고, 실행은 수동으로 한다.
 
-  python bench_llm.py --base-url http://localhost:4000 --model gpt-4o \
+  python bench_llm.py --base-url http://localhost:4000 --model chat \
       --concurrency 1,4,16 --prompt-tokens 512 --max-tokens 256 [--api-key sk-..] [--requests 8]
 """
 
