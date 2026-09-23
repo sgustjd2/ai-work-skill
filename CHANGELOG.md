@@ -2,6 +2,28 @@
 
 이 파일은 [Keep a Changelog](https://keepachangelog.com/ko/1.1.0/) 형식을 따르고, 버전은 [유의적 버전](https://semver.org/lang/ko/)을 쓴다. 날짜는 `YYYY-MM-DD`.
 
+## [0.3.0] - 2026-09-23
+
+Claude Opus 5.5 출시(2026-09-22)를 계기로 스킬에 박힌 외부 사실을 공식 문서로 다시 확인하고 갱신했다. 스킬 수는 그대로 12개다.
+
+### 변경
+
+- 게이트웨이 `model_name`을 벤더 모델명(`gpt-4o`)에서 용도 별칭(`chat`, `claude`, `gemini`, `openai`, `internal-llm`, `embed`)으로 바꿨다. 모델을 교체해도 앱 설정은 그대로 둔다. `fastapi-service` 골격, `client_example.py`, `bench_llm.py`, `llm-mocking.md`의 기본 모델도 `chat`이다.
+- 모델 ID를 현행으로 바꿨다: Azure `gpt-6-sol`(v1 API라 `api_version: "v1"`), Bedrock `global.anthropic.claude-sonnet-5`(서울 리전), Vertex `gemini-3.8-flash`(`global`), 사내 vLLM `qwen3.8-27b`. 제공자 참조에 데이터 처리 위치(Global Standard, global 프로파일)와 모델 종료 일정을 적었다.
+- LiteLLM 이미지를 `v1.102.0`으로 고정했다(`main-latest` 금지). 운영 런북에 2026년 보안 권고와 PyPI 악성 배포 확인 절차를 넣었다.
+- `model-serving`: vLLM 0.30 기준 인자(프리픽스 캐싱 기본 켜짐, `--reasoning-parser`, `--tool-call-parser`, `--kv-cache-dtype fp8`, `--runner pooling`), FP8·NVFP4·MXFP4 양자화와 llm-compressor, 서빙 대안(SGLang·Dynamo·llm-d, TGI 보관 처리), GPU 메모리 표·MoE 사이징·모델 라이선스 주의.
+- `vram_estimate.py`가 `nvfp4`·`mxfp4`와 96·141·180GB 카드를 계산한다.
+- `references/genai-patterns.md`: contextual retrieval·BM25·리랭크, 롱컨텍스트 대 RAG 판단, 제약 디코딩과 툴 검색, Rule of Two, 작업·평가 에이전트 분리, OWASP LLM 2026·Agentic Top 10, 인공지능기본법 표시 의무, pass^k, effort·캐시 순서·배치 API.
+- `ai-trend-brief` 출처에 변경 이력(모델 종료 공지)과 국내 분류를 더했다. 33개 URL 응답을 확인했다.
+
+### 제거
+
+- 게이트웨이 `compose.yaml`의 Langfuse 서비스. v3부터 ClickHouse·Redis·S3가 필요해 단독 컨테이너로는 뜨지 않았다. 공식 compose로 따로 띄운다.
+
+### 출처
+
+- `docs/research/sources-2026-09-23.md`. 조사 에이전트 3개가 공식 문서·릴리스·PyPI를 직접 열어 확인했다.
+
 ## [0.2.0] - 2026-09-06
 
 산출물을 사람 글로 되돌리는 스킬과 독립 HTML 다이어그램 도구를 더했다. 스킬 11개에서 12개로 늘었다.
@@ -37,5 +59,6 @@
 - `STYLE.md` 문서 계약, `themes/datasolution.json` 팔레트, 골든 프롬프트 8개와 `eval/check_output.py`.
 - 벤더 중립 층: `.codex-plugin/`, `AGENTS.md`, `docs/hosts.md`. Codex CLI에서 두 MCP 서버 호출을 실제로 확인했다.
 
+[0.3.0]: https://github.com/sgustjd2/ai-work-skill/releases/tag/v0.3.0
 [0.2.0]: https://github.com/sgustjd2/ai-work-skill/releases/tag/v0.2.0
 [0.1.0]: https://github.com/sgustjd2/ai-work-skill/releases/tag/v0.1.0
