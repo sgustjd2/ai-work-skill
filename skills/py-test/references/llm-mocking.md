@@ -16,7 +16,7 @@ def test_chat(client):
         return_value=httpx.Response(
             200,
             json={
-                "model": "gpt-4o",
+                "model": "chat",
                 "choices": [{"message": {"content": "요약 결과"}}],
                 "usage": {"total_tokens": 13},
             },
