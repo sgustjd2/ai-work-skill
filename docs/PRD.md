@@ -1312,7 +1312,7 @@ python templates/install.py --target <dir> [--org "데이타솔루션 기술연�
       "args": ["run", "--project", "${CLAUDE_PLUGIN_ROOT}/mcp/litellm_ops", "python", "-m", "litellm_ops.server"],
       "env": {
         "LITELLM_BASE_URL": "${LITELLM_BASE_URL:-http://localhost:4000}",
-        "LITELLM_MASTER_KEY": "${LITELLM_MASTER_KEY}",
+        "LITELLM_MASTER_KEY": "${LITELLM_MASTER_KEY:-}",
         "LITELLM_API_KEY": "${LITELLM_API_KEY:-}",
         "LITELLM_OPS_ALLOW_WRITE": "${LITELLM_OPS_ALLOW_WRITE:-false}"
       }
