@@ -2,6 +2,15 @@
 
 이 파일은 [Keep a Changelog](https://keepachangelog.com/ko/1.1.0/) 형식을 따르고, 버전은 [유의적 버전](https://semver.org/lang/ko/)을 쓴다. 날짜는 `YYYY-MM-DD`.
 
+## [0.3.1] - 2026-09-23
+
+0.3.0 설치본을 실제로 확인하다 찾은 설정 문제 두 건을 고쳤다. 스킬 내용은 0.3.0과 같다.
+
+### 수정
+
+- `.mcp.json`: `LITELLM_MASTER_KEY` 기본값을 `${LITELLM_MASTER_KEY:-}`로 바꿨다. 환경변수가 없으면 `${LITELLM_MASTER_KEY}` 글자 그대로 `litellm-ops`에 넘어가 인증 헤더로 쓰였다. 이제 빈 값이 되어 헤더를 붙이지 않는다.
+- `.claude-plugin/marketplace.json`: 마켓플레이스 설명을 넣어 `claude plugin validate` 경고를 없앴다.
+
 ## [0.3.0] - 2026-09-23
 
 Claude Opus 5.5 출시(2026-09-22)를 계기로 스킬에 박힌 외부 사실을 공식 문서로 다시 확인하고 갱신했다. 스킬 수는 그대로 12개다.
@@ -59,6 +68,7 @@ Claude Opus 5.5 출시(2026-09-22)를 계기로 스킬에 박힌 외부 사실�
 - `STYLE.md` 문서 계약, `themes/datasolution.json` 팔레트, 골든 프롬프트 8개와 `eval/check_output.py`.
 - 벤더 중립 층: `.codex-plugin/`, `AGENTS.md`, `docs/hosts.md`. Codex CLI에서 두 MCP 서버 호출을 실제로 확인했다.
 
+[0.3.1]: https://github.com/sgustjd2/ai-work-skill/releases/tag/v0.3.1
 [0.3.0]: https://github.com/sgustjd2/ai-work-skill/releases/tag/v0.3.0
 [0.2.0]: https://github.com/sgustjd2/ai-work-skill/releases/tag/v0.2.0
 [0.1.0]: https://github.com/sgustjd2/ai-work-skill/releases/tag/v0.1.0
