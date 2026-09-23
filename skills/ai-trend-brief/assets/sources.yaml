@@ -1,20 +1,43 @@
 # AI 트렌드 브리프의 출처 목록. 관련도는 STYLE.md 1절의 서비스 목록으로 판단한다.
+# RSS·Atom 이 있으면 그것을 먼저 읽는다(날짜가 정확하다). 모든 URL 은 2026-09-23 에 응답을 확인했다.
 official_blogs:
-  - https://openai.com/news/
+  - https://openai.com/news/rss.xml
   - https://www.anthropic.com/news
-  - https://blog.google/technology/ai/
+  - https://blog.google/technology/ai/rss/
+  - https://deepmind.google/blog/rss.xml
   - https://ai.meta.com/blog/
   - https://azure.microsoft.com/en-us/blog/
   - https://aws.amazon.com/blogs/machine-learning/
+# 모델 ID·API 변경·종료 공지. 게이트웨이 config 와 서비스 기본 모델에 바로 영향을 준다.
+changelogs:
+  - https://platform.claude.com/docs/en/release-notes/overview
+  - https://github.com/anthropics/claude-code/releases.atom
+  - https://developers.openai.com/api/docs/changelog
+  - https://developers.openai.com/api/docs/deprecations
+  - https://ai.google.dev/gemini-api/docs/changelog
+  - https://blog.modelcontextprotocol.io/index.xml
+  - https://docs.gitlab.com/releases/19/
 releases:
   - https://github.com/BerriAI/litellm/releases
+  - https://github.com/BerriAI/litellm/security/advisories
   - https://github.com/vllm-project/vllm/releases
+  - https://github.com/sgl-project/sglang/releases
   - https://github.com/fastapi/fastapi/releases
   - https://github.com/langchain-ai/langgraph/releases
+  - https://github.com/langfuse/langfuse/releases
 papers:
   - https://arxiv.org/list/cs.CL/recent
   - https://arxiv.org/list/cs.AI/recent
   - https://huggingface.co/papers
 community:
-  - https://huggingface.co/blog
+  - https://huggingface.co/blog/feed.xml
+  - https://github.blog/changelog/feed/
   - https://github.com/trending/python?since=weekly
+# 국내 모델·정책·시장. 인공지능기본법 하위 규정과 독자 AI 파운데이션 모델 소식이 여기서 나온다.
+korea:
+  - https://www.msit.go.kr/bbs/list.do?sCode=user&mPid=208&mId=307
+  - https://spri.kr/
+  - https://www.aisi.re.kr/kor
+  - https://www.aitimes.com/rss/allArticle.xml
+  - https://www.aitimes.kr/rss/allArticle.xml
+  - https://news.hada.io/rss/news
