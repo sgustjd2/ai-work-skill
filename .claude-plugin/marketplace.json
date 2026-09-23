@@ -1,5 +1,6 @@
 {
   "name": "ai-work-skill",
+  "description": "생성형 AI 서비스 개발 조직용 Claude Code 플러그인 마켓플레이스. FastAPI·GitLab CI·LiteLLM 게이트웨이·모델 서빙·문서와 덱 생성 스킬 12개와 MCP 서버 2개를 담은 ai-work-skill 을 배포한다.",
   "owner": { "name": "sgustjd2" },
   "plugins": [
     {
