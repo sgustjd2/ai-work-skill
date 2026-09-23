@@ -35,7 +35,7 @@ FR-9~19, 36 전부 구현. docgen 테스트 53개 + M0 72개 = 125 PASS. ruff·d
 - FR-14 lint 단일 구현: `lint.py` 가 `templates/doc_lint.py` 를 sys.modules 등록 후 import → `doc_lint.lint is docgen.lint.lint`. `test_lint_bridge.py`·`test_lint_extract_theme.py` 로 확인.
 - FR-15 preview: `preview.py`. LibreOffice(soffice) 탐색 → PDF → PNG(pdftoppm), 없으면 available=false + 안내(CI 안 깸).
 - FR-16 추출: `extract.py`. docx_to_md·pptx_to_md·theme_from_pptx(clrScheme/fontScheme 매핑 초안)·layouts.
-- FR-17 deck-write: `skills/deck-write/SKILL.md` + `references/{slide-rules,layouts}.md`.
+- FR-17 deck-write: `skills/deck-write/SKILL.md` + `references/{slide-rules,layouts,deck-method}.md`. deck-method(내용 정리, 디자인 기준 네 가지, 본문 두 장 파일럿, 수정 기준) 추가 2026-09-24, 출처 `docs/research/sources-2026-09-24.md`.
 - FR-19 arch-doc-types: `skills/doc-write/references/arch-doc-types.md`(설계서·AS-IS/TO-BE·인터페이스·런북·ADR·구성도 규약).
 - FR-36 diagram_from_compose: compose.yaml → 노드 kind 추론(litellm→gateway, pgvector→data 등)·depends_on→엣지.
 - 테마: `theme.py`(로드 4단계 해석·색 역할·tint·mix·대비). 소스에 hex 리터럴 0(테스트 강제).
