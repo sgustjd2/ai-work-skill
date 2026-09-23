@@ -101,3 +101,13 @@ FR-39·FR-40 구현으로 프로젝트 M0~M5 전체 완료, **v0.2.0 배포**(�
 - 원천: 위키독스 "누구나 할 수 있는 AI 글쓰기" 02장 4개 절(`docs/research/sources-2026-09-06.md`, PRD 부록 G). 표면 신호는 doc_lint 가 이미 잡으므로 스크립트는 재료·판단·근거만 본다(D15: 훅이 아니라 스킬이 부르는 스크립트).
 - 골든 09(`eval/prompts/09-humanize.md`): 픽스처에 `humanize_scan` 을 돌려 확인 후보 2건(근거 없음 2)·신호 3종·재료 밀도 0.07 을 확인. 진단→재작성 재현은 스킬이 붙은 세션에서.
 - FR-40 archify 연동(PRD §5.6, D16): `install.py --with-archify`(`archify_install_cmd`·`archify_home` + 테스트 1, 이미 설치면 건너뛰고 doctor), `references/diagram-tools.md`(DSL 대 archify, 절차, PNG 첨부), `ai-init`·`doc-write`·`deck-write`·`arch-doc-types`·스니펫·README·AGENTS·hosts 연결. 실측: v2.17.0-dev.1 전역 설치, 한국어 게이트웨이 예제 validate 9항목·deliver(HTML 708KB)·visual-check pass(가로 배치, PNG 4장). 골든 10(`eval/prompts/10-archify.md`)에 픽스처 JSON. 출처 `docs/research/sources-2026-09-06.md`.
+
+## 외부 사실 갱신 (v0.3.0, 2026-09-23)
+
+새 FR 없이 FR-27·29·30·35 의 내용을 현행으로 바꿨다. 출처는 `docs/research/sources-2026-09-23.md`.
+
+- FR-27 llm-gateway: model_name 용도 별칭(`chat` 등), Azure `gpt-6-sol`·`api_version: "v1"`, Bedrock `global.anthropic.claude-sonnet-5`(서울), Vertex `gemini-3.8-flash`(global), vLLM `qwen3.8-27b`, LiteLLM `v1.102.0` 고정, 단독 기동 불가 Langfuse 서비스 제거. 검증: `config_validate` ok, findings 0.
+- FR-29 model-serving: vLLM 0.30 인자, FP8·NVFP4·MXFP4, 대안(TGI 보관), GPU 표·MoE·라이선스. `vram_estimate` 에 nvfp4·mxfp4·카드 3종. 검증: `test_m3_scripts::test_vram_weights_exact` 에 MoE MXFP4 단언 추가, PASS.
+- FR-30 ai-trend-brief: changelogs·korea 분류. 검증: 33개 URL HTTP 200.
+- FR-35 genai-patterns: RAG·구조화 출력·에이전트·가드레일·평가·비용 갱신. 검증: `doc_lint` 하드 0.
+- 앱 기본 모델 `gpt-4o` → `chat`(FR-20 골격, FR-22 llm-mocking). 검증: 전체 `uv run pytest` PASS.
