@@ -7,7 +7,7 @@ doc_lint: off
 
 ---
 
-Azure gpt-4o 두 리전에 Bedrock Claude 폴백, 팀별 예산으로 LiteLLM config.yaml 만들어줘.
+Azure GPT(gpt-6-sol) 두 리전에 Bedrock Claude 폴백, 팀별 예산으로 LiteLLM config.yaml 만들어줘.
 
 ---
 

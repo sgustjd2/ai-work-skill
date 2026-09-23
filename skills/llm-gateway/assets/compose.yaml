@@ -1,6 +1,7 @@
 services:
   litellm:
-    image: ghcr.io/berriai/litellm:main-latest
+    # 버전을 고정한다. main-latest 같은 움직이는 태그는 쓰지 않는다. 올릴 때는 ops-runbook 업그레이드 절차.
+    image: ghcr.io/berriai/litellm:v1.102.0
     command: ["--config", "/app/config.yaml", "--port", "4000"]
     ports: ["4000:4000"]
     env_file: .env
@@ -18,13 +19,8 @@ services:
     volumes:
       - litellm_pg:/var/lib/postgresql/data
 
-  # 관측(선택). 프로파일로 켠다: docker compose --profile obs up
-  langfuse:
-    image: langfuse/langfuse:latest
-    profiles: [obs]
-    ports: ["3000:3000"]
-    env_file: .env
-    depends_on: [postgres]
+  # 관측(Langfuse)은 여기 두지 않는다. v3 부터 ClickHouse·Redis·S3 가 함께 필요해 컨테이너 하나로는 뜨지 않는다.
+  # 공식 docker-compose 로 따로 띄우고 LANGFUSE_HOST 로 연결한다(references/observability.md).
 
 volumes:
   litellm_pg:

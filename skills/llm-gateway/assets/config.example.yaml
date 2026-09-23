@@ -1,47 +1,56 @@
 # LiteLLM 게이트웨이 설정 예시. 시크릿은 모두 os.environ/ 참조다. .env.example 과 1:1.
 # 배포 전 검사: python -m litellm_ops config-validate config.yaml (또는 litellm-ops config_validate).
+# model_name 은 벤더 모델명이 아니라 용도 별칭(chat·claude·gemini·embed)이다. 모델을 바꿔도 앱 설정은 그대로 둔다.
+# 모델 ID 확인일 2026-09-23(docs/research/sources-2026-09-23.md). 배포 전에 제공자 문서로 다시 확인한다.
 model_list:
-  # Azure gpt-4o 두 리전(같은 model_name 으로 로드밸런싱)
-  - model_name: gpt-4o
+  # Azure GPT 두 리전(같은 model_name 으로 로드밸런싱). v1 API 라 날짜형 api_version 이 필요 없다.
+  - model_name: chat
     litellm_params:
-      model: azure/gpt-4o
+      model: azure/gpt-6-sol
       api_base: os.environ/AZURE_API_BASE_KR
       api_key: os.environ/AZURE_API_KEY_KR
-      api_version: "2024-08-01-preview"
+      api_version: "v1"
       rpm: 300
-  - model_name: gpt-4o
+  - model_name: chat
     litellm_params:
-      model: azure/gpt-4o
+      model: azure/gpt-6-sol
       api_base: os.environ/AZURE_API_BASE_JP
       api_key: os.environ/AZURE_API_KEY_JP
-      api_version: "2024-08-01-preview"
+      api_version: "v1"
       rpm: 300
 
-  # Bedrock Claude (폴백 후보)
-  - model_name: claude-sonnet
+  # Bedrock Claude (폴백 후보). 서울에서는 global 추론 프로파일만 된다.
+  - model_name: claude
     litellm_params:
-      model: bedrock/anthropic.claude-3-5-sonnet-20241022-v2:0
-      aws_region_name: us-east-1
+      model: bedrock/global.anthropic.claude-sonnet-5
+      aws_region_name: ap-northeast-2
 
-  # Vertex Gemini
+  # Vertex Gemini. 3.x 는 global 위치만 제공한다.
   - model_name: gemini
     litellm_params:
-      model: vertex_ai/gemini-1.5-pro
+      model: vertex_ai/gemini-3.8-flash
       vertex_project: os.environ/GCP_PROJECT
-      vertex_location: us-central1
+      vertex_location: global
+
+  # OpenAI 직접(Azure 에 아직 없는 모델을 먼저 써 볼 때)
+  - model_name: openai
+    litellm_params:
+      model: openai/gpt-6-sol
+      api_key: os.environ/OPENAI_API_KEY
 
   # 사내 vLLM
   - model_name: internal-llm
     litellm_params:
-      model: hosted_vllm/Qwen2.5-32B-Instruct
+      model: hosted_vllm/qwen3.8-27b
       api_base: os.environ/VLLM_BASE_URL
 
-  # 임베딩
+  # 임베딩. 모델을 바꾸면 벡터 공간이 달라져 전부 다시 임베딩해야 한다.
   - model_name: embed
     litellm_params:
       model: azure/text-embedding-3-small
       api_base: os.environ/AZURE_API_BASE_KR
       api_key: os.environ/AZURE_API_KEY_KR
+      api_version: "v1"
 
 litellm_settings:
   drop_params: true
@@ -49,10 +58,10 @@ litellm_settings:
   request_timeout: 30
   # 제공자 장애 시 폴백. 폴백 모델도 골든 테스트에 넣는다.
   fallbacks:
-    - gpt-4o: [claude-sonnet, gemini]
-    - claude-sonnet: [gemini]
+    - chat: [claude, gemini]
+    - claude: [gemini]
   context_window_fallbacks:
-    - gpt-4o: [claude-sonnet]
+    - internal-llm: [chat]
   # 관측: Langfuse 로 프롬프트·비용을 남긴다(키는 환경변수).
   # success_callback: ["langfuse"]
   # 캐시: 같은 입력 반복 시 비용 절감(redis).

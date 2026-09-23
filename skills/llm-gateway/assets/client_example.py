@@ -20,14 +20,14 @@ client = OpenAI(
 COMMON = {"user": "summary-service", "extra_body": {"metadata": {"tags": ["summary", "prod"]}}}
 
 
-def chat(message: str, model: str = "gpt-4o") -> str:
+def chat(message: str, model: str = "chat") -> str:
     resp = client.chat.completions.create(
         model=model, messages=[{"role": "user", "content": message}], timeout=30, **COMMON
     )
     return resp.choices[0].message.content
 
 
-def stream(message: str, model: str = "gpt-4o"):
+def stream(message: str, model: str = "chat"):
     with client.chat.completions.stream(
         model=model, messages=[{"role": "user", "content": message}], **COMMON
     ) as s:
@@ -36,7 +36,7 @@ def stream(message: str, model: str = "gpt-4o"):
                 yield event.delta
 
 
-def structured(message: str, schema: dict, model: str = "gpt-4o") -> dict:
+def structured(message: str, schema: dict, model: str = "chat") -> dict:
     resp = client.chat.completions.create(
         model=model,
         messages=[{"role": "user", "content": message}],
