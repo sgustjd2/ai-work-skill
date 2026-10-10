@@ -2,6 +2,8 @@
 
 이 저장소는 데이타솔루션 생성형 AI 조직용 Claude Code 플러그인이다. 설계는 `docs/PRD.md`가 전부 담고 있으며, 코드는 그 PRD만 보고 만든다.
 
+디자인 방향: 산출물(docx·pptx·다이어그램)은 웹 UI가 아니므로 전역 CLAUDE.md와 `/ui-*` 명령의 B2B 웹 UI 기본값을 쓰지 않고, `templates/STYLE.md`와 `themes/*.json`(데이타솔루션 테마)만 따른다.
+
 ## 시작 전에 읽는 순서
 1. `docs/PRD.md` §16(구현 지침) → §13(마일스톤) → 현재 마일스톤의 FR 행(§6) → 해당 §8~§11 절.
 2. `docs/research/sources-2026-09-04.md`: 외부 사실(GitLab MCP, LiteLLM API, FastMCP, 브랜드 색)의 출처와 확인일. 현재 문서와 다르면 현재 문서를 따르고 차이를 여기에 한 줄 기록한다. `sources-2026-09-06.md` 는 `humanize` 스킬의 원천(위키독스 3축).
