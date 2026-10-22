@@ -7,6 +7,7 @@
 ### 수정
 
 - `py-review`: `allowed-tools` 가 `mcp__gitlab` 서버 전체를 미리 허용해 `save_note`·`save_merge_request_review` 도 승인 없이 실행될 수 있었다. 조회 툴 둘(`get_merge_request`, `get_merge_request_diffs`)만 남겨 게시는 승인 프롬프트를 거친다.
+- `gitlab-ci`: 같은 문제. `save_pipeline`(retry·cancel)까지 열려 있던 것을 조회 툴 셋(`get_pipeline`, `get_pipeline_jobs`, `get_job`)으로 줄였다. `tests/test_skill_tools.py` 가 스킬의 `mcp__gitlab` 서버 전체 허용을 막는다.
 
 ## [0.3.2] - 2026-09-24
 
