@@ -86,7 +86,7 @@ FR-27~30 전부 구현. litellm_ops 21 + M3 스크립트 5 테스트 추가(누�
 
 FR-31~34 전부 구현. 누적 171 테스트 PASS(+manual 1), ruff clean, doc_lint 자기검사 하드 0(97문서). 프로젝트 M0~M4 전체 완료.
 
-- FR-31 매니페스트: `.claude-plugin/plugin.json`(skills·mcpServers 배선)·`marketplace.json`, `.mcp.json`(docgen·litellm-ops stdio + gitlab http, ${CLAUDE_PLUGIN_ROOT}), `skills/llms.txt`(11줄), `LICENSE`(MIT)·`NOTICE`(ui-skill-set·review-report-writer 출처, 팔레트 출처).
+- FR-31 매니페스트: `.claude-plugin/plugin.json`(skills·mcpServers 배선)·`marketplace.json`, `.mcp.json`(docgen·litellm-ops stdio, ${CLAUDE_PLUGIN_ROOT}. gitlab http 항목은 `install.py` 가 프로젝트 `.mcp.json` 에 병합한다), `skills/llms.txt`(11줄), `LICENSE`(MIT)·`NOTICE`(ui-skill-set·review-report-writer 출처, 팔레트 출처).
 - FR-32 eval: `eval/check_output.py`(산문 doc_lint 하드 0·덱 소프트 0 + 생성 docx/pptx 콘텐츠 색이 테마 팔레트·파생 틴트 안인지), 골든 프롬프트 8개, `results.md` 기준선, `eval/README.md`. 렌더 픽스처로 PASS 재현(test_m4_eval).
 - FR-33 ui 연동: `install.py accent_ramp`(테마 action→--ui-accent-100..900, hex 리터럴 없음) + `inject_accent_ramp`(tokens.css 교체). `--with-ui` 가 install.mjs 실행 후 램프 주입.
 - FR-34 CI: `.github/workflows/ci.yml`(ubuntu+windows 매트릭스, uv sync·ruff check·format·pytest·doc_lint --all). 렌더러 hex 리터럴 0 검사는 pytest(test_theme)로.

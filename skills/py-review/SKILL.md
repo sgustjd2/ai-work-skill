@@ -13,7 +13,8 @@ allowed-tools:
   - Bash(git log *)
   - Bash(uv run pytest *)
   - Bash(uv run ruff *)
-  - mcp__gitlab
+  - mcp__gitlab__get_merge_request
+  - mcp__gitlab__get_merge_request_diffs
 ---
 
 # py-review

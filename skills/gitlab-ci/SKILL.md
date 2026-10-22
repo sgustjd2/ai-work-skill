@@ -11,7 +11,9 @@ argument-hint: "[생성 | 진단 <pipeline id|MR> | 배포 대상]"
 allowed-tools:
   - Bash(python */skills/gitlab-ci/scripts/ci_lint.py *)
   - Bash(git *)
-  - mcp__gitlab
+  - mcp__gitlab__get_pipeline
+  - mcp__gitlab__get_pipeline_jobs
+  - mcp__gitlab__get_job
 ---
 
 # gitlab-ci

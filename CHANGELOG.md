@@ -2,6 +2,14 @@
 
 이 파일은 [Keep a Changelog](https://keepachangelog.com/ko/1.1.0/) 형식을 따르고, 버전은 [유의적 버전](https://semver.org/lang/ko/)을 쓴다. 날짜는 `YYYY-MM-DD`.
 
+## [Unreleased]
+
+### 수정
+
+- `py-review`: `allowed-tools` 가 `mcp__gitlab` 서버 전체를 미리 허용해 `save_note`·`save_merge_request_review` 도 승인 없이 실행될 수 있었다. 조회 툴 둘(`get_merge_request`, `get_merge_request_diffs`)만 남겨 게시는 승인 프롬프트를 거친다.
+- `gitlab-ci`: 같은 문제. `save_pipeline`(retry·cancel)까지 열려 있던 것을 조회 툴 셋(`get_pipeline`, `get_pipeline_jobs`, `get_job`)으로 줄였다. `tests/test_skill_tools.py` 가 스킬의 `mcp__gitlab` 서버 전체 허용을 막는다.
+- `.mcp.json`: 플러그인 루트의 `gitlab` 항목을 뺐다. `GITLAB_URL` 이 없는 환경에서는 플러그인을 켤 때마다 `Missing environment variables: GITLAB_URL` 로 연결 실패가 났다. PRD §11.7 은 플러그인 `.mcp.json` 을 docgen·litellm-ops 둘로 정의한다. GitLab 서버는 `/ai-init` 이 프로젝트 `.mcp.json` 에 넣는다(`--gitlab-url`). 플러그인만 설치하고 `/ai-init` 을 돌리지 않은 프로젝트는 GitLab MCP 를 직접 등록해야 한다(`gitlab-mcp-playbook.md`).
+
 ## [0.3.2] - 2026-09-24
 
 `deck-write` 에 덱 제작 순서와 수정 기준을 넣었다. 스킬 수는 그대로 12개다.

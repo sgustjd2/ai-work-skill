@@ -17,10 +17,6 @@
         "LITELLM_OPS_ALLOW_WRITE": "${LITELLM_OPS_ALLOW_WRITE:-false}",
         "LITELLM_CONFIG_PATH": "${LITELLM_CONFIG_PATH:-}"
       }
-    },
-    "gitlab": {
-      "type": "http",
-      "url": "${GITLAB_URL}/api/v4/mcp"
     }
   }
 }
