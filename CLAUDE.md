@@ -20,6 +20,7 @@
 - Windows 우선 검증: `pathlib`, `sys.stdout/stderr.reconfigure(encoding="utf-8")`, 심링크·bash·jq 사용 금지, 테스트는 `tmp_path`.
 - MCP 툴은 절대 경로를 반환하고 `warnings: []`를 항상 포함한다. 시크릿은 마스킹 외 어떤 형태로도 반환·로그하지 않는다.
 - 문서(`docs/`, `README.md`, `skills/**/SKILL.md`)는 우리 도구로 검사한다: em-dash·상투어·이모지 없음. 규칙 목록을 담은 파일은 frontmatter `doc_lint: off`.
+- 이 저장소의 편집에도 `.claude/settings.json` 훅(`doc_lint --pre/--stop`, `py_format`)이 걸린다. `doc_lint` 는 루트 `STYLE.md` 가 없으면 no-op 이라 그 파일이 설정이다. 산출물의 문서 계약은 `templates/STYLE.md`.
 
 ## 검증 명령
 ```bash
