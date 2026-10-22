@@ -2,6 +2,12 @@
 
 이 파일은 [Keep a Changelog](https://keepachangelog.com/ko/1.1.0/) 형식을 따르고, 버전은 [유의적 버전](https://semver.org/lang/ko/)을 쓴다. 날짜는 `YYYY-MM-DD`.
 
+## [Unreleased]
+
+### 수정
+
+- `py-review`: `allowed-tools` 가 `mcp__gitlab` 서버 전체를 미리 허용해 `save_note`·`save_merge_request_review` 도 승인 없이 실행될 수 있었다. 조회 툴 둘(`get_merge_request`, `get_merge_request_diffs`)만 남겨 게시는 승인 프롬프트를 거친다.
+
 ## [0.3.2] - 2026-09-24
 
 `deck-write` 에 덱 제작 순서와 수정 기준을 넣었다. 스킬 수는 그대로 12개다.
